@@ -2469,6 +2469,11 @@ const st=document.createElement('style');st.id='rvCss';st.textContent=`
 @keyframes fvEdge{0%{background-position:0 0,0% 50%}100%{background-position:0 0,300% 50%}}
 @keyframes fvShine{0%{left:-70%}60%,100%{left:130%}}
 @media(prefers-reduced-motion:reduce){#bFull,#bFull:before{animation:none!important}}
+
+#fvPill [data-fv="x"]{position:relative;color:#fff!important;font-weight:800!important;letter-spacing:.6px;border:1.5px solid transparent!important;background:linear-gradient(135deg,#0a2a8f,#1e5bff 55%,#0a2a8f) padding-box,linear-gradient(120deg,#ffd60a,#2f7bff,#ffd60a,#2f7bff) border-box!important;background-size:100% 100%,300% 300%!important;box-shadow:0 0 12px rgba(47,123,255,.65),0 0 22px rgba(255,214,10,.35),inset 0 1px 0 rgba(255,255,255,.35);animation:fvGlow 1.4s ease-in-out infinite,fvEdge 3s linear infinite;text-shadow:0 0 8px rgba(255,214,10,.8);overflow:hidden}
+#fvPill [data-fv="x"]:before{content:'';position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,236,120,.75),transparent);transform:skewX(-20deg);animation:fvShine 2.2s ease-in-out infinite;pointer-events:none}
+#fvPill [data-fv="x"]:hover{transform:scale(1.06);filter:brightness(1.15)}
+@media(prefers-reduced-motion:reduce){#fvPill [data-fv="x"],#fvPill [data-fv="x"]:before{animation:none!important}}
 @media(max-width:700px){.rvh{padding:12px 14px 6px}.rvu{margin-left:14px}.rvk,.rvc,.rvt,.rvn{padding-left:14px;padding-right:14px}.rvk .v{font-size:18px}}
 `;document.head.appendChild(st);
 
