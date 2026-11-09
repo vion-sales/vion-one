@@ -856,8 +856,8 @@ function counter(el,to,fmt){if(!el)return;el.textContent=fmt(to);if(matchMedia('
 function destroy(){charts.forEach(c=>c.destroy());charts=[]}
 const perLabel=()=>per==='T'?D.months[cur]+tt(' (to date)',' (अब तक)'):per==='ALL'?tt('All months','सभी महीने'):D.months[+per];
 /* ===== header, tabs, menu ===== */
-const PAGES=[['score','Scorecard','स्कोरकार्ड','score'],['psales','Primary Sales','प्राइमरी सेल्स','psales'],['rev','Revenue','राजस्व','rev'],['team','Team','टीम','team'],['mkt','Market','बाज़ार','mkt'],['risk','Risk & Opportunity','जोखिम और अवसर','risk'],['act','Actions','कार्रवाई','act'],['qa','Data QA','डेटा QA','qa'],['all','All','सभी','all']];
-const PGOF={'s-deck':'mission','s-ans':'mission','s-gap':'mission','s-kpi':'mission','s-cockpit':'mission','s-chg':'mission','s-rev':'rev','s-cal':'rev','s-fc':'rev','s-bench':'rev','s-th':'rev','s-team':'team','s-heat':'team','s-slab':'team','s-twin':'team','s-ex':'team','s-map':'mkt','s-prod':'mkt','s-risk':'risk','s-anom':'risk','s-opp':'risk','s-act':'act','s-qa':'qa'};
+const PAGES=[['score','Scorecard','स्कोरकार्ड','score'],['psales','Primary Sales','प्राइमरी सेल्स','psales'],['rev','Revenue','राजस्व','rev'],['team','Team','टीम','team'],['risk','Risk & Opportunity','जोखिम और अवसर','risk'],['act','Actions','कार्रवाई','act'],['qa','Data QA','डेटा QA','qa'],['all','All','सभी','all']];
+const PGOF={'s-deck':'mission','s-ans':'mission','s-gap':'mission','s-kpi':'mission','s-cockpit':'mission','s-chg':'mission','s-rev':'rev','s-cal':'rev','s-fc':'rev','s-bench':'rev','s-th':'rev','s-team':'team','s-heat':'team','s-slab':'team','s-twin':'team','s-ex':'team','s-map':'dists','s-risk':'risk','s-anom':'risk','s-opp':'risk','s-act':'act','s-qa':'qa'};
 function renderHeader(x){
  const mons=D.mkeys.map((k,i)=>i).filter(i=>i>=first);
  $('hctl').innerHTML=`${AUR()==='asm'?`<label class="sel"><span>${tt('Territory','क्षेत्र')}</span><b class="terrb">${esc(ASMS[0]||'')}</b></label>`:`<label class="sel"><span>ASM</span><select id="selAsm" aria-label="ASM">${['All',...ASMS].map(s=>`<option value="${esc(s)}"${s===scope?' selected':''}>${s==='All'?tt('All ASMs','सभी ASM'):esc(s)}</option>`).join('')}</select></label>`}<label class="sel"><span>${tt('Month','महीना')}</span><select id="selPer" aria-label="${tt('Month','महीना')}">${mons.map(i=>{const v=i===cur?'T':String(i);return `<option value="${v}"${v===per?' selected':''}>${D.months[i]}${i===cur?tt(' (to date)',' (अब तक)'):''}</option>`}).join('')}<option value="ALL"${per==='ALL'?' selected':''}>${tt('All months','सभी महीने')}</option></select></label>${AUR()==='admin'?`<button class="hb" id="bUpload" title="${tt('Upload a newer Excel workbook: every tab updates','नई Excel वर्कबुक अपलोड करें: सभी टैब अपडेट होंगे')}">${ic('upload')}<span>${tt('Upload Excel','Excel अपलोड')}</span></button>`:''}<button class="hb hide-s" id="bPresent" title="${tt('Boardroom slideshow','बोर्डरूम स्लाइड शो')}">${ic('present')}<span>${tt('Present','प्रस्तुति')}</span></button>${AUR()==='admin'?`<button class="hb" id="bUsers" title="${tt('Reset passwords, add or remove ASM logins','पासवर्ड रीसेट, ASM लॉगिन जोड़ें या हटाएँ')}"><span>${tt('Team logins','टीम लॉगिन')}</span></button>`:''}<button class="hb hide-s" id="bOut" title="${tt('Signed in as','साइन इन')} ${esc(AUI())}"><span>${esc(AUI())} · ${tt('Log out','लॉग आउट')}</span></button><button class="hb ic" id="bTheme" title="${theme==='dark'?tt('Light theme','लाइट थीम'):tt('Dark theme','डार्क थीम')}" aria-label="${theme==='dark'?tt('Switch to light theme','लाइट थीम पर जाएं'):tt('Switch to dark theme','डार्क थीम पर जाएं')}">${ic(theme==='dark'?'sun':'moon')}</button><button class="hb ic" id="bMore" aria-haspopup="menu" aria-expanded="false" aria-label="${tt('More options','और विकल्प')}">${ic('more')}</button>`;
@@ -1124,7 +1124,7 @@ function render(){
  colors();derive();destroy();X=build();const x=X;
  document.documentElement.lang=lang==='hi'?'hi':'en';
  const gd=LS.get('vion-guide',0)?'':`<div class="guide" id="guide" data-pg="mission"><div><b>${tt('New here?','पहली बार?')}</b> ${tt('Pick an ASM and a month at the top. Click any tile to jump to its detail. Keys 1–9 switch pages; Present starts the boardroom slideshow.','ऊपर ASM और महीना चुनें। किसी टाइल पर क्लिक करें, उसका विवरण खुलेगा। कुंजी 1–9 पेज बदलती हैं; प्रस्तुति बोर्डरूम स्लाइड शो शुरू करता है।')}</div><button id="guideX">${tt('Got it','समझ गया')}</button></div>`;
- const order=[heroHTML(x),gd,ansHTML(x),gapHTML(x),signalsHTML(x),cockpitHTML(x),chgHTML(x),scoreHTML(x),psalesHTML(x),revHTML(x),calHTML(x),fcHTML(x),benchHTML(x),thHTML(),teamHTML(x),heatHTML(x),slabHTML(x),twinHTML(x),exHTML(),mapHTML(x),prodHTML(x),riskHTML(x),anomHTML(x),oppHTML(x),actHTML(x),qaHTML(x)];
+ const order=[heroHTML(x),gd,ansHTML(x),gapHTML(x),signalsHTML(x),cockpitHTML(x),chgHTML(x),scoreHTML(x),psalesHTML(x),revHTML(x),calHTML(x),fcHTML(x),benchHTML(x),thHTML(),teamHTML(x),heatHTML(x),slabHTML(x),twinHTML(x),exHTML(),mapHTML(x),riskHTML(x),anomHTML(x),oppHTML(x),actHTML(x),qaHTML(x)];
  let html=order.join('');
  html=html.replace(/<section([^>]*?) id="(s-[a-z]+)"/g,(m_,pre,id)=>PGOF[id]?`<section${pre} id="${id}" data-pg="${PGOF[id]}"`:m_);
  $('main').innerHTML=html;
@@ -1608,9 +1608,7 @@ function psalesHTML(x){
    <div class="psab">${z.asms.map(a=>{const mx=Math.max(.01,...z.asms.map(q=>Math.max(q.t,q.b)));return `<div class="psa"><div class="psan"><b>${esc(a.a)}</b> · ${a.t>0?pct(a.r)+' '+tt('of target','लक्ष्य का'):tt('no target','लक्ष्य नहीं')}</div>
     <div class="psbar"><i style="--w:${(a.t/mx*100).toFixed(1)}%;--c:${PSC.pink}"></i><em>${f1(a.t)}</em></div><div class="psbar"><i style="--w:${(Math.max(0,a.b)/mx*100).toFixed(1)}%;--c:${PSC.maroon}"></i><em>${f1(a.b)}</em></div></div>`}).join('')}</div></div>
   <div class="psc lt ch2"><h3>${tt('Distributor Target vs Billed (₹ L)','डिस्ट्रीब्यूटर लक्ष्य बनाम बिल (₹ L)')}</h3><div class="pscv tall"><canvas id="cPsT" role="img" aria-label="${tt('Distributor target vs billed','डिस्ट्रीब्यूटर लक्ष्य बनाम बिल')}"></canvas></div></div>
-  <div class="psc lt ch2"><h3>${tt('Units by SKU · all months','SKU-वार यूनिट · सभी महीने')}</h3><p class="psn dk">${tt(`${z.skuTot} units billed. SKU data is not split by ASM.`,`${z.skuTot} यूनिट बिल। SKU डेटा ASM-वार नहीं है।`)}</p>
-   <div class="pss">${z.skus.slice(0,9).map(s=>`<div class="pssr"><span>${esc(s.n)}${s.c>1?` (${s.c} ${tt('codes','कोड')})`:''}</span><div class="psbar"><i style="--w:${(s.u/skuMax*100).toFixed(1)}%;--c:${PSC.maroon}"></i><em>${s.u}</em></div></div>`).join('')}</div></div>
-  <div class="psc lt ch2"><h3>${tt(`Distributor Billing · ${ms} MTD`,`डिस्ट्रीब्यूटर बिलिंग · ${ms} MTD`)}</h3><p class="psn dk">${tt(`Green ≥100% · Amber 90–99% · Red <90% · Grey = no ${ms} target`,`हरा ≥100% · पीला 90–99% · लाल <90% · ग्रे = ${ms} लक्ष्य नहीं`)}</p><div class="psls">${list||`<p class="psn dk">${tt('No distributors in this view.','इस दृश्य में डिस्ट्रीब्यूटर नहीं।')}</p>`}</div></div>
+    <div class="psc lt ch2"><h3>${tt(`Distributor Billing · ${ms} MTD`,`डिस्ट्रीब्यूटर बिलिंग · ${ms} MTD`)}</h3><p class="psn dk">${tt(`Green ≥100% · Amber 90–99% · Red <90% · Grey = no ${ms} target`,`हरा ≥100% · पीला 90–99% · लाल <90% · ग्रे = ${ms} लक्ष्य नहीं`)}</p><div class="psls">${list||`<p class="psn dk">${tt('No distributors in this view.','इस दृश्य में डिस्ट्रीब्यूटर नहीं।')}</p>`}</div></div>
  </div>
  <div class="ps-ft"><span>${tt('Source: VION ASM Wise Dashboard (Target vs Achievement, Monthly Business, SKU Summary).','स्रोत: VION ASM वाइज़ डैशबोर्ड।')}</span><span>${tt('Achievement uses billing incl GST against target incl GST, as in the workbook.','उपलब्धि: GST सहित बिल बनाम GST सहित लक्ष्य, वर्कबुक की तरह।')}</span></div>
 </section>`;
@@ -2124,27 +2122,11 @@ function distsHTML(){
  const ds=[...dd.values()].sort((a,b)=>b.v-a.v),mx=Math.max(1,...ds.map(o=>o.v));
  const stT=[...ss.values()].sort((a,b)=>b.v-a.v).map((z,i)=>`<div class="kpi" style="--c:${[C.cyan,C.purple,C.orange][i%3]}"><div class="k">${esc(z.n==='—'?tt('Not in distributor master','डिस्ट्रीब्यूटर मास्टर में नहीं'):z.n)}</div><div class="v">₹${f2(nsvL(z.v))} L</div><div class="s">${tot>0?(z.v/tot*100).toFixed(1):'0.0'}% ${tt('of NSV','NSV का')}</div><div class="lnbar"><i style="width:${tot>0?Math.max(0,Math.min(100,z.v/tot*100)):0}%"></i></div></div>`).join('');
  const rows=ds.slice(0,25).map((o,i)=>`<div class="lnrow"><span class="nm" title="${esc(o.n)}">${i+1}. ${esc(o.n)} <span class="sub2">· ${esc(o.st)}</span></span><span class="tr"><i style="width:${Math.max(0,o.v/mx*100)}%"></i></span><span class="vv">₹${f2(nsvL(o.v))} L · ${tot>0?(o.v/tot*100).toFixed(1):'0.0'}%</span></div>`).join('');
- const mapBox=GEO?`<div class="lnh">${tt('District map · darker = more NSV','ज़िला नक्शा · गहरा = ज़्यादा NSV')}</div><div class="mapc dmc"><svg class="map" id="dmap" viewBox="0 0 ${GEO.w} ${GEO.h}" role="img" aria-label="${tt('District map of Madhya Pradesh and Gujarat shaded by NSV','NSV के अनुसार मध्य प्रदेश और गुजरात का ज़िला नक्शा')}"></svg><div class="mtip" id="dmtip" hidden></div></div>`:'';
- const body=`${bar()}<div class="lnk">${stT}</div>${mapBox}<div class="lnh">${tt('Top districts by NSV','NSV के अनुसार टॉप ज़िले')}</div><div class="lnbars">${rows||`<p class="note">${tt('No sales in this period.','इस अवधि में बिक्री नहीं।')}</p>`}</div>
- <div class="lnb" style="margin-top:14px"><button class="chip" data-go="mkt">${ic('dists')} ${tt('Open the district map (Market tab)','ज़िला नक्शा खोलें (Market टैब)')}</button></div>
+ const body=`${bar()}<div class="lnk">${stT}</div><div class="lnh">${tt('Top districts by NSV','NSV के अनुसार टॉप ज़िले')}</div><div class="lnbars">${rows||`<p class="note">${tt('No sales in this period.','इस अवधि में बिक्री नहीं।')}</p>`}</div>
  <p class="lnn">${tt('Districts follow the distributor–ASM mapping used in this dashboard. NSV is signed net sales (credits and cancellations included).','ज़िले इस डैशबोर्ड की डिस्ट्रीब्यूटर–ASM मैपिंग के अनुसार हैं। NSV में क्रेडिट और कैंसिलेशन शामिल हैं।')}</p>`;
  return sec('s-dists',tt('Districts','ज़िले'),tt('Where the billing comes from','बिलिंग कहाँ से आती है'),body);
 }
 
-function drawDM(){
- const svg=document.getElementById('dmap');if(!svg||!GEO||!(D.ln&&D.ln.length))return;
- const dm=dmap(),L=scoped(),byK=new Map(GEO.d.map(d=>[dkey(d.n),d])),agg=new Map();
- L.forEach(l=>{const d=dm.get(String(l.c));if(!d)return;const k=dkey(d.dt||d.city);if(!byK.has(k))return;const o=agg.get(k)||{v:0,c:new Set(),i:new Set()};o.v+=l.n;o.c.add(l.c);o.i.add(l.i);agg.set(k,o)});
- const mx=Math.max(1,...[...agg.values()].map(o=>o.v)),sw=svg.getBoundingClientRect().width||GEO.w,sc=Math.max(.2,sw/GEO.w),U=v=>v/sc;
- let h='';
- GEO.d.forEach(d=>{const k=dkey(d.n),o=agg.get(k),a=o&&o.v>0?.18+.72*Math.sqrt(o.v/mx):0;
-  h+=`<path class="dp" d="${d.p}" data-k="${k}" fill="${a?`color-mix(in srgb,${C.cyan} ${Math.round(a*100)}%,transparent)`:C.tint}" style="stroke-width:${U(.8).toFixed(2)}"><title>${esc(d.n)}${o?' · ₹'+f2(nsvL(o.v))+' L':''}</title></path>`});
- const f=U(11);
- h+=`<text x="${GEO.w-8}" y="${(f+6).toFixed(1)}" text-anchor="end" style="font:500 ${f.toFixed(1)}px var(--mono);letter-spacing:.3em;fill:var(--mut)">${tt('MADHYA PRADESH','मध्य प्रदेश')}</text><text x="8" y="${GEO.h-8}" style="font:500 ${f.toFixed(1)}px var(--mono);letter-spacing:.3em;fill:var(--mut)">${tt('GUJARAT','गुजरात')}</text>`;
- [...agg.entries()].filter(e=>e[1].v>0).sort((a,b)=>b[1].v-a[1].v).slice(0,sw<560?4:8).forEach(([k,o])=>{const d=byK.get(k),fs=U(11.5),tw=fs*.56*d.n.length,right=d.c[0]+tw+U(8)<=GEO.w-4;
-  h+=`<circle cx="${d.c[0]}" cy="${d.c[1]}" r="${U(3.2).toFixed(1)}" fill="${C.hi}"/><text x="${(right?d.c[0]+U(6):d.c[0]-U(6)).toFixed(1)}" y="${(d.c[1]+fs*.35).toFixed(1)}" text-anchor="${right?'start':'end'}" style="font:500 ${fs.toFixed(1)}px var(--body);fill:var(--fg);paint-order:stroke;stroke:var(--card);stroke-width:${U(3).toFixed(1)}px;stroke-linejoin:round">${esc(d.n)} ₹${f2(nsvL(o.v))}L</text>`});
- svg.innerHTML=h;
-}
 /* ---------- Customers (distributor buckets + ranking) ---------- */
 const BK=[['hi',tt('More than ₹10 L','₹10 L से ज़्यादा'),'#16A34A'],['mid',tt('₹5–10 L','₹5–10 L'),'#2563EB'],['lo',tt('Below ₹5 L','₹5 L से कम'),'#F59E0B'],['no',tt('Not billed','बिल नहीं'),'#64748B']];
 const bkOf=v=>v>10?'hi':v>=5?'mid':v>0?'lo':'no';
@@ -2164,12 +2146,12 @@ function custsHTML(){
 }
 
 /* ---------- hook into render ---------- */
-const _qa=qaHTML;qaHTML=function(x){setTimeout(drawDM,0);return _qa(x)+prodsHTML()+docsHTML()+distsHTML()+custsHTML()};
-if(typeof redrawVisible==='function'){const _rv=redrawVisible;redrawVisible=function(){_rv.apply(this,arguments);drawDM()}}
+const _qa=qaHTML;qaHTML=function(x){return _qa(x)+prodsHTML()+docsHTML()+distsHTML()+custsHTML()};
+
 
 /* ---------- interactions (delegated; only these four sections are redrawn) ---------- */
 const FN={'s-prods':prodsHTML,'s-docs':docsHTML,'s-dists':distsHTML,'s-custs':custsHTML};
-function swap(id,focusQ){setTimeout(drawDM,0);
+function swap(id,focusQ){
  const el=document.getElementById(id);if(!el)return;
  const t=document.createElement('div');t.innerHTML=FN[id]().replace(/<section([^>]*?) id="(s-[a-z]+)"/,(m_,pre,i)=>`<section${pre} id="${i}" data-pg="${PGOF[i]}"`);
  const n=t.firstElementChild;n.classList.toggle('pgx',el.classList.contains('pgx'));el.replaceWith(n);
