@@ -2173,8 +2173,8 @@ Object.assign(PGOF,{'s-solar':'solar','s-mnre':'mnre','s-subs':'subs'});
 Object.assign(IC,{
  solar:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/>',
  mnre:'<path d="M12 3 4 6v6c0 4.5 3.2 7.6 8 9 4.8-1.4 8-4.5 8-9V6z"/><path d="m8.5 12 2.4 2.4 4.6-4.8"/>',
- subs:'<path d="M12 3v18"/><path d="M16.5 7.5c-.7-1.3-2.2-2-4.5-2-2.6 0-4.2 1.1-4.2 2.9 0 4.3 8.9 1.6 8.9 6 0 1.8-1.8 3.1-4.5 3.1-2.4 0-4.1-.9-4.7-2.4"/>'});
-PAGES.push(['solar','Solar','सोलर','solar'],['mnre','MNRE Vendors','MNRE वेंडर','mnre'],['subs','Subsidy','सब्सिडी','subs']);
+ subs:'<path d="M6.5 5h11"/><path d="M6.5 9.5h11"/><path d="M6.5 5h3.8a3.6 3.6 0 0 1 0 7.2H6.5l7.8 7"/>'});
+PAGES.push(['mnre','MNRE Vendors','MNRE वेंडर','mnre'],['subs','Subsidy','सब्सिडी','subs']);
 
 const st=document.createElement('style');st.id='gvCss';st.textContent=`
 .gvg{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:0 0 14px}
@@ -2331,8 +2331,8 @@ function subsHTML(){
  return sec('s-subs',tt('Subsidy','सब्सिडी'),tt('PM Surya Ghar Muft Bijli Yojana','पीएम सूर्य घर मुफ़्त बिजली योजना'),watchHTML()+tb+k3+steps+foot);
 }
 
-FN['s-solar']=solarHTML;FN['s-mnre']=mnreHTML;FN['s-subs']=subsHTML;
-const _q2=qaHTML;qaHTML=function(x){return _q2(x)+solarHTML()+mnreHTML()+subsHTML()};
+FN['s-mnre']=mnreHTML;FN['s-subs']=subsHTML;
+const _q2=qaHTML;qaHTML=function(x){return _q2(x)+mnreHTML()+subsHTML()};
 
 function swap(id){
  const el=document.getElementById(id);if(!el)return;
@@ -2381,6 +2381,20 @@ document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#ta
 new MutationObserver(()=>setTimeout(sync,0)).observe(document.body,{childList:true,subtree:true,attributes:false});
 setInterval(sync,1500);setTimeout(sync,500);
 })();
+
+/* ===== Tab bar: all tabs on one line on desktop/laptop (no sideways scrolling) ===== */
+(function(){const c=document.createElement('style');c.id='tabFitCss';c.textContent=`
+@media(min-width:1000px){
+.tabs{flex-wrap:nowrap;justify-content:space-between;gap:0}
+.tabs button{flex:1 1 auto;min-width:0;justify-content:center;padding:9px 5px 11px;font-size:12px;gap:4px}
+.tabs button svg{width:15px;height:15px;flex:none}
+.tabs .bd2{min-width:17px;padding:0 5px;font-size:10px}}
+.tabs button .bd2{margin-left:2px}
+@media(max-width:999px){#tabs.tabs{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px 0}
+.tabs button{flex-direction:column;justify-content:flex-start;align-items:center;text-align:center;white-space:normal;gap:3px;padding:7px 1px 8px;font-size:9px;line-height:1.15;letter-spacing:-.2px;border-radius:8px}
+.tabs button svg{width:17px;height:17px}.tabs .bd2{position:absolute;top:2px;right:4px;font-size:9px;min-width:15px;line-height:15px;padding:0 4px}
+.tabs button.on::after{left:14px;right:14px}#tabs.tabs button{white-space:normal!important;min-width:0!important;overflow:hidden;padding:7px 0 8px!important;word-break:normal!important;overflow-wrap:normal!important}#tabs.tabs button .bd2{overflow:visible}}
+@media(min-width:1000px) and (max-width:1439px){.tabs button svg{display:none}.tabs button{padding:9px 5px 11px;font-size:12px}}`;document.head.appendChild(c)})();
 
 /* ===== ULTRON AI COMMAND CENTER (its own tab; not part of Mission, Revenue or any other page) =====
    What is real here: every number comes from the loaded workbook (D / X). Open questions go to Claude through the page's `sample`
