@@ -2167,7 +2167,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('input',e=>{if(e.target&&e.target.id==='docQ'){dQ=e.target.value;dPg=0;swap('s-docs',true)}});
 })();
 
-/* ===== Govt tabs at the end: Solar, MNRE Vendors, Subsidy. Data: govt.json (MNRE vendor import) + govt_status.json (daily Govt watch) ===== */
+/* ===== Govt tabs at the end: Solar, MNRE Vendors, Subsidy. Vendor list: D.mv (encrypted, per ASM); Govt watch: govt_status.json ===== */
 (function(){
 Object.assign(PGOF,{'s-solar':'solar','s-mnre':'mnre','s-subs':'subs'});
 Object.assign(IC,{
@@ -2214,11 +2214,13 @@ const INR=n=>'₹'+Math.round(n).toLocaleString('en-IN');
 const BCOL=['#2563EB','#7C3AED','#F59E0B','#16A34A','#EA580C','#0891B2','#DB2777','#64748B','#0EA5E9','#E11D48','#8B5CF6','#84CC16','#14B8A6'];
 
 /* ---------- data loading (same-origin JSON, loaded only when a Govt tab is opened) ---------- */
-let G=null,GS=null,gErr=false,gLoading=false,sErr=false;
+let G=null,GK=null,GS=null,gErr=false,sErr=false;
 const FN={};
 function loadG(){
- if(G||gLoading||gErr)return;gLoading=true;
- fetch('govt.json?v='+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json()}).then(j=>{G=prep(j);gLoading=false;redraw()}).catch(()=>{gErr=true;gLoading=false;redraw()});
+ const k=(D.mv?D.mv.d.length:-1)+'|'+scope;
+ if(G&&GK===k)return;
+ if(!D.mv||!D.mv.d||!D.mv.d.length){G=null;gErr=true;return}
+ gErr=false;GK=k;G=prep({imported:D.mv.imported,brands:D.mv.brands,d:D.mv.d.filter(x=>scope==='All'||x[2]===scope)});
 }
 function loadS(){
  if(GS||sErr)return;
@@ -2226,12 +2228,12 @@ function loadS(){
 }
 function prep(j){
  const rows=[],uniq=new Set(),sts=new Set();
- j.d.forEach(([s,d,more,rs])=>{sts.add(s);rs.forEach(r=>{uniq.add(r[0].toUpperCase());rows.push({s,d,n:r[0],b:r[1],r:r[2],rc:r[3],kw:r[4],p:r[5]})})});
+ j.d.forEach(([s,d,asm,rs])=>{sts.add(s);rs.forEach(r=>{uniq.add(r[0].toUpperCase());rows.push({s,d,asm,n:r[0],b:r[1],r:r[2],rc:r[3],kw:r[4],p:r[5],per:r[6]||'',em:r[7]||'',mob:r[8]||'',rk:r[9]})})});
  j.rows=rows;j.uniq=uniq.size;j.sts=[...sts].sort();
- j.dists=j.d.map(([s,d,more,rs])=>({s,d,more,n:rs.length,kw:sum(rs.map(r=>r[4]||0)),p:sum(rs.map(r=>r[5]||0)),vk:rs.filter(r=>r[1].includes(9)).length}));
+ j.dists=j.d.map(([s,d,asm,rs])=>({s,d,asm,n:rs.length,kw:sum(rs.map(r=>r[4]||0)),p:sum(rs.map(r=>r[5]||0)),vk:rs.filter(r=>r[1].includes(9)).length}));
  return j;
 }
-const loadingBox=id=>sec(id,id==='s-solar'?'Solar':id==='s-mnre'?'MNRE Vendors':'Subsidy','',`<p class="gvn">${gErr?tt('Govt data file could not be loaded. Please refresh the page.','सरकारी डेटा फ़ाइल लोड नहीं हो सकी। पेज रिफ्रेश करें।'):tt('Loading Govt data…','सरकारी डेटा लोड हो रहा है…')}</p>`);
+const loadingBox=id=>sec(id,id==='s-solar'?'Solar':id==='s-mnre'?'MNRE Vendors':'Subsidy','',`<p class="gvn">${tt('The vendor list is not loaded in this file. It comes with the published data; an Excel upload does not carry it.','वेंडर सूची इस फ़ाइल में नहीं है। यह प्रकाशित डेटा में आती है; Excel अपलोड में नहीं।')}</p>`);
 const linkRow=()=>`<div class="gvl">${LINKS.map(l=>`<a href="${l[2]}" target="_blank" rel="noopener noreferrer">${tt(l[0],l[1])} ↗</a>`).join('')}</div>`;
 const impDate=()=>G&&G.imported?new Date(G.imported).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',timeZone:'Asia/Kolkata'}):'';
 
@@ -2257,7 +2259,7 @@ function brandMix(){
  return {arr,mx,rows:rows.length,any};
 }
 function solarHTML(){
- loadG();if(!G)return loadingBox('s-solar');
+ loadG();if(!G||!G.rows.length)return loadingBox('s-solar');
  const r=calc(),m=brandMix();
  const inp=(k,l,t='number',x='')=>`<label>${l}<input data-sc="${k}" type="${t}" value="${SC[k]}" ${x}></label>`;
  const res=r.kw<1?`<p class="gvn">${tt('The roof area is too small for a 1 kW system (about 10 m² per kW is needed).','1 kW सिस्टम के लिए छत का क्षेत्र कम है (प्रति kW लगभग 10 m² चाहिए)।')}</p>`:`<div class="gvres">
@@ -2280,12 +2282,13 @@ function solarHTML(){
 
 /* ---------- MNRE Vendors ---------- */
 const MV={view:'v',st:'All',d:'All',b:'All',q:'',pg:0,PS:20};
+const contact=r=>{const m=String(r.mob||'').replace(/\D/g,'');return (r.per?esc(r.per)+'<br>':'')+(m?`<a href="tel:+91${m}">${m}</a> · <a href="https://wa.me/91${m}" target="_blank" rel="noopener noreferrer">WhatsApp</a>`:'—')+(r.em?`<br><small>${esc(r.em)}</small>`:'')};
 function mnreHTML(){
- loadG();if(!G)return loadingBox('s-mnre');
+ loadG();if(!G||!G.rows.length)return loadingBox('s-mnre');
  const ds=[...new Set(G.rows.filter(r=>MV.st==='All'||r.s===MV.st).map(r=>r.d))].sort();
  if(MV.d!=='All'&&!ds.includes(MV.d))MV.d='All';
  const q=MV.q.trim().toLowerCase();
- const L=G.rows.filter(r=>(MV.st==='All'||r.s===MV.st)&&(MV.d==='All'||r.d===MV.d)&&(MV.b==='All'||r.b.includes(+MV.b))&&(!q||r.n.toLowerCase().includes(q)));
+ const L=G.rows.filter(r=>(MV.st==='All'||r.s===MV.st)&&(MV.d==='All'||r.d===MV.d)&&(MV.b==='All'||r.b.includes(+MV.b))&&(!q||(r.n+' '+r.per+' '+r.em+' '+r.mob).toLowerCase().includes(q)));
  const kpis=`<div class="gvk"><div class="kpi" style="--c:#2563EB"><div class="k">${tt('Registered vendors','पंजीकृत वेंडर')}</div><div class="v">${f0(G.uniq)}</div><div class="s">${G.dists.length} ${tt('districts','ज़िले')}</div></div>
  <div class="kpi" style="--c:#16A34A"><div class="k">${tt('Vendor-district listings','वेंडर-ज़िला लिस्टिंग')}</div><div class="v">${f0(G.rows.length)}</div><div class="s">${tt('a vendor can serve several districts','एक वेंडर कई ज़िलों में हो सकता है')}</div></div>
  <div class="kpi" style="--c:#F59E0B"><div class="k">${tt('Vikram Solar partners','विक्रम सोलर पार्टनर')}</div><div class="v">${G.rows.filter(r=>r.b.includes(9)).length}</div><div class="s">${tt('vendor-district listings','वेंडर-ज़िला लिस्टिंग')}</div></div></div>`;
@@ -2293,16 +2296,16 @@ function mnreHTML(){
  let body;
  if(MV.view==='d'){
   const A=G.dists.filter(o=>MV.st==='All'||o.s===MV.st).sort((a,b)=>b.p-a.p);
-  body=`<div class="tw"><table class="tbl gvt"><thead><tr><th class="n">#</th><th>${tt('District','ज़िला')}</th><th class="n">${tt('Vendors listed','वेंडर')}</th><th class="n">kWp*</th><th class="n">${tt('Projects','प्रोजेक्ट')}*</th><th class="n">Vikram</th></tr></thead><tbody>${A.map((o,i)=>`<tr><td class="n">${i+1}</td><td class="t">${esc(o.d)}<small>${esc(o.s)}</small></td><td class="n">${o.n}${o.more?'+':''}</td><td class="n">${f0(o.kw)}</td><td class="n">${f0(o.p)}</td><td class="n">${o.vk}</td></tr>`).join('')}</tbody></table></div>
-  <p class="gvn">${tt('Each district lists its top 200 vendors by projects; “+” means the portal has more than that.','हर ज़िले में प्रोजेक्ट के हिसाब से टॉप 200 वेंडर हैं; “+” का मतलब पोर्टल पर इससे ज़्यादा हैं।')}</p>`;
+  body=`<div class="tw"><table class="tbl gvt"><thead><tr><th class="n">#</th><th>${tt('District','ज़िला')}</th><th class="n">${tt('Vendors listed','वेंडर')}</th><th class="n">kWp*</th><th class="n">${tt('Projects','प्रोजेक्ट')}*</th><th class="n">Vikram</th></tr></thead><tbody>${A.map((o,i)=>`<tr><td class="n">${i+1}</td><td class="t">${esc(o.d)}<small>${esc(o.s)} · ${esc(o.asm?o.asm.split(' ')[0]:tt('No ASM yet','ASM तय नहीं'))}</small></td><td class="n">${o.n}</td><td class="n">${f0(o.kw)}</td><td class="n">${f0(o.p)}</td><td class="n">${o.vk}</td></tr>`).join('')}</tbody></table></div>
+  <p class="gvn">${tt('Districts shown are those in your territory. Vendors are ranked by projects within each district.','यहाँ आपके क्षेत्र के ज़िले दिख रहे हैं। हर ज़िले में वेंडर प्रोजेक्ट के हिसाब से क्रमबद्ध हैं।')}</p>`;
  }else{
   const S=L.slice().sort((a,b)=>b.p-a.p||b.kw-a.kw),pages=Math.max(1,Math.ceil(S.length/MV.PS));MV.pg=Math.min(MV.pg,pages-1);
   const pg=S.slice(MV.pg*MV.PS,MV.pg*MV.PS+MV.PS);
   body=`<div class="gvf"><input id="gvQ" data-mvq placeholder="${tt('Search vendor','वेंडर खोजें')}" value="${esc(MV.q)}"><select data-mvs="st"><option value="All">${tt('All states','सभी राज्य')}</option>${G.sts.map(s=>`<option ${MV.st===s?'selected':''}>${esc(s)}</option>`).join('')}</select><select data-mvs="d"><option value="All">${tt('All districts','सभी ज़िले')}</option>${ds.map(s=>`<option ${MV.d===s?'selected':''}>${esc(s)}</option>`).join('')}</select><select data-mvs="b"><option value="All">${tt('All brands','सभी ब्रांड')}</option>${G.brands.map((s,i)=>`<option value="${i}" ${String(MV.b)===String(i)?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
-  <div class="tw"><table class="tbl gvt"><thead><tr><th class="n">#</th><th>${tt('Vendor','वेंडर')}</th><th>${tt('Brands','ब्रांड')}</th><th class="n">${tt('Rating','रेटिंग')}</th><th class="n">kWp*</th><th class="n">${tt('Projects','प्रोजेक्ट')}*</th></tr></thead><tbody>${pg.map((r,i)=>`<tr><td class="n">${MV.pg*MV.PS+i+1}</td><td class="t">${esc(r.n)}<small>${esc(r.d)} · ${esc(r.s)}</small></td><td>${r.b.length?r.b.map(x=>esc(G.brands[x])).join(', '):'—'}</td><td class="n">${r.r!=null?r.r+' ('+f0(r.rc||0)+')':'—'}</td><td class="n">${f0(r.kw)}</td><td class="n">${f0(r.p)}</td></tr>`).join('')||`<tr><td colspan="6" class="t">${tt('No vendors match.','कोई वेंडर नहीं मिला।')}</td></tr>`}</tbody></table></div>
+  <div class="tw"><table class="tbl gvt"><thead><tr><th class="n">#</th><th>${tt('Vendor','वेंडर')}</th><th>${tt('Brands','ब्रांड')}</th><th class="n">${tt('Rating','रेटिंग')}</th><th>${tt('Contact','संपर्क')}</th><th class="n">kWp*</th><th class="n">${tt('Projects','प्रोजेक्ट')}*</th></tr></thead><tbody>${pg.map((r,i)=>`<tr><td class="n">${MV.pg*MV.PS+i+1}</td><td class="t">${esc(r.n)}<small>${esc(r.d)} · ${esc(r.s)}</small></td><td>${r.b.length?r.b.map(x=>esc(G.brands[x])).join(', '):'—'}</td><td class="n">${r.r!=null?r.r+' ('+f0(r.rc||0)+')':'—'}</td><td>${contact(r)}</td><td class="n">${f0(r.kw)}</td><td class="n">${f0(r.p)}</td></tr>`).join('')||`<tr><td colspan="7" class="t">${tt('No vendors match.','कोई वेंडर नहीं मिला।')}</td></tr>`}</tbody></table></div>
   <div class="gvpg"><button class="chip" data-mvp="-1" ${MV.pg===0?'disabled':''}>‹ ${tt('Prev','पिछला')}</button><span>${f0(S.length)} ${tt('listings','लिस्टिंग')} · ${tt('Page','पेज')} ${MV.pg+1} / ${pages}</span><button class="chip" data-mvp="1" ${MV.pg>=pages-1?'disabled':''}>${tt('Next','अगला')} ›</button></div>`;
  }
- const src=`<p class="gvn">${tt('Source: official MNRE portal (pmsuryaghar.gov.in), imported ','स्रोत: आधिकारिक MNRE पोर्टल (pmsuryaghar.gov.in), आयात ')}${impDate()}. ${tt('Public data only. * kWp and projects are the figures as imported from the portal listing, not verified by VION. Rating is the public Google rating with review count in brackets.','केवल सार्वजनिक डेटा। * kWp और प्रोजेक्ट पोर्टल लिस्टिंग से आयातित आँकड़े हैं, VION द्वारा सत्यापित नहीं। रेटिंग सार्वजनिक Google रेटिंग है, कोष्ठक में रिव्यू संख्या।')}</p>${linkRow()}`;
+ const src=`<p class="gvn">${tt('Source: MNRE portal vendor list with contact details (private), imported ','स्रोत: MNRE पोर्टल वेंडर सूची, संपर्क सहित (निजी), आयात ')}${impDate()}. ${tt('Private: visible after login only. * kWp and projects are the figures as imported from the portal listing, not verified by VION. Rating is the public Google rating with review count in brackets.','निजी: केवल लॉगिन के बाद दिखता है। * kWp और प्रोजेक्ट पोर्टल लिस्टिंग से आयातित आँकड़े हैं, VION द्वारा सत्यापित नहीं। रेटिंग सार्वजनिक Google रेटिंग है, कोष्ठक में रिव्यू संख्या।')}</p>${linkRow()}`;
  return sec('s-mnre',tt('MNRE Vendors','MNRE वेंडर'),tt('Government-registered rooftop solar vendors','सरकार-पंजीकृत रूफटॉप सोलर वेंडर'),kpis+chips+body+src);
 }
 
@@ -2659,7 +2662,7 @@ function boot(){const b=$('boot');if(!b)return;let seen=false;try{seen=sessionSt
   for(const sc of Object.keys(rec.wk))out[sc]=await unseal(k,rec.wk[sc],'wk|'+rec.id+'|'+sc);return out}
  // territory slice: only that ASM's distributors, invoices and towns; zone-only panels emptied
  function slice(D,asm){const d=JSON.parse(JSON.stringify(D));d.asms=[asm];d.dist=d.dist.filter(x=>x.asm===asm);d.tx=d.tx.filter(t=>t.a===asm);d.ln=(d.ln||[]).filter(l=>l.a===asm);
-  d.terr=(d.terr||[]).filter(t=>t[1]===asm);d.sku=[];d.fix=[];d.scopeOnly=asm;return d}
+  d.terr=(d.terr||[]).filter(t=>t[1]===asm);d.sku=[];d.fix=[];d.mv=d.mv?Object.assign({},d.mv,{d:d.mv.d.filter(x=>x[2]===asm)}):d.mv;d.scopeOnly=asm;return d}
  async function sealData(D,dks){const blobs={};for(const sc of Object.keys(dks)){const v=sc==='ALL'?D:slice(D,sc);blobs[sc]=await seal(await imp(dks[sc]),enc.encode(JSON.stringify(v)),'data|'+sc)}
   return {v:1,asof:D.asof,made:new Date().toISOString().slice(0,10),blobs}}
  async function openData(file,sc,raw){return JSON.parse(dec.decode(await unseal(await imp(raw),file.blobs[sc],'data|'+sc)))}
