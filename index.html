@@ -1465,8 +1465,6 @@ function scoreHTML(x){
  const pp=z.pace,ar=z.T>0?z.A/z.T:0,fr=z.T>0?m.end/z.T:0,w=v=>Math.max(0,Math.min(100,v*100)).toFixed(1)+'%';
  const g3=z.gaps.slice(0,3);
  const ins=[
-  ['target',C.cyan,z.T>0?tt(`<b>${L_(z.A)}</b> billed — <b>${pct(ar)}</b> of the ${L_(z.T)} target with ${Math.round(pp*100)}% of the month gone.`,`<b>${L_(z.A)}</b> बिल — ${L_(z.T)} लक्ष्य का <b>${pct(ar)}</b>, महीने का ${Math.round(pp*100)}% बीत चुका।`):tt(`<b>${L_(z.A)}</b> billed. No target is set for this view.`,`<b>${L_(z.A)}</b> बिल। इस दृश्य का कोई लक्ष्य नहीं।`)],
-  ['fcst',C.purple,tt(`At today's run-rate the month lands near <b>${L_(m.end)}</b>${z.T>0?` (${pct(fr)})`:''}; it needs <b>${L_(m.pace)}</b> a day for ${m.left} days.`,`मौजूदा रफ़्तार से महीना <b>${L_(m.end)}</b> के आसपास${z.T>0?` (${pct(fr)})`:''}; ${m.left} दिन तक रोज़ <b>${L_(m.pace)}</b> चाहिए।`)],
   ['alert',C.red,g3.length?tt(`Largest open gaps: ${g3.map(r=>`<b>${esc(r.d.name)}</b> ${L_(r.gap)}`).join(', ')}.`,`सबसे बड़े अंतर: ${g3.map(r=>`<b>${esc(r.d.name)}</b> ${L_(r.gap)}`).join(', ')}।`):tt('No open gaps among targeted distributors.','लक्षित डिस्ट्रीब्यूटर में कोई अंतर नहीं।')],
   ['bolt',C.orange,z.A>0?tt(`<b>${pct(z.ntA/z.A)}</b> of this month's billing came from distributors without a target — plan them in.`,`इस महीने की बिलिंग का <b>${pct(z.ntA/z.A)}</b> बिना लक्ष्य वाले डिस्ट्रीब्यूटर से — इन्हें योजना में लें।`):tt('No billing yet this month.','इस महीने अभी बिलिंग नहीं।')]];
  const head=`<section class="sec sch rise" id="s-sch"><div class="sch-l">
