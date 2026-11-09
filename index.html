@@ -2397,6 +2397,33 @@ setInterval(sync,1500);setTimeout(sync,500);
 .tabs button.on::after{left:14px;right:14px}#tabs.tabs button{white-space:normal!important;min-width:0!important;overflow:hidden;padding:7px 0 8px!important;word-break:normal!important;overflow-wrap:normal!important}#tabs.tabs button .bd2{overflow:visible}}
 @media(min-width:1000px) and (max-width:1439px){.tabs button svg{display:none}.tabs button{padding:9px 5px 11px;font-size:12px}}`;document.head.appendChild(c)})();
 
+/* ===== Full view: hides the top bar and tabs for a clean full-screen read; Esc (or the pill) returns to the basic view ===== */
+(function(){
+const c=document.createElement('style');c.id='fvCss';c.textContent=`
+body.fv #brand,body.fv #bnav,body.fv .tick{display:none!important}
+body.fv main{padding-top:56px}
+#fvPill{position:fixed;z-index:2147482000;top:calc(10px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));display:none;align-items:center;gap:6px;padding:5px 6px 5px 12px;border-radius:999px;border:1px solid var(--line2);background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(8px);color:var(--hi);font:600 12.5px var(--body);box-shadow:0 8px 30px rgba(0,0,0,.35)}
+body.fv #fvPill{display:flex}
+#fvPill button{border:1px solid var(--line2);background:var(--card2);color:var(--hi);border-radius:999px;min-width:30px;height:30px;padding:0 10px;font:600 12.5px var(--body);cursor:pointer}
+#fvPill button:hover{border-color:var(--cyan)}#fvPill .nm{max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}`;
+document.head.appendChild(c);
+const pill=document.createElement('div');pill.id='fvPill';pill.innerHTML='<button type="button" data-fv="-1" aria-label="Previous tab">‹</button><span class="nm" id="fvNm"></span><button type="button" data-fv="1" aria-label="Next tab">›</button><button type="button" data-fv="x">Esc · Back</button>';
+document.body.appendChild(pill);
+const nm=()=>{const p=PAGES.find(z=>z[0]===page);const e=document.getElementById('fvNm');if(e&&p)e.textContent=tt(p[1],p[2])};
+function on(){document.body.classList.add('fv');nm();window.scrollTo({top:0,behavior:'auto'});try{const r=document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();if(r&&r.catch)r.catch(()=>{})}catch(e){}}
+function off(){document.body.classList.remove('fv');try{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}catch(e){}}
+const toggle=()=>document.body.classList.contains('fv')?off():on();
+function step(d){const i=PAGES.findIndex(z=>z[0]===page);const n=PAGES[(i+d+PAGES.length)%PAGES.length];setPage(n[0]);nm()}
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-fv],#bFull');if(!t)return;
+ if(t.id==='bFull'){toggle();return}
+ if(t.dataset.fv==='x')off();else step(+t.dataset.fv)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('fv')){off()}
+ else if(document.body.classList.contains('fv')&&(e.key==='ArrowRight'||e.key==='ArrowLeft')&&!/INPUT|SELECT|TEXTAREA/.test((e.target.tagName||''))){step(e.key==='ArrowRight'?1:-1)}});
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.body.classList.contains('fv'))document.body.classList.remove('fv')});
+function ensure(){const h=document.getElementById('hctl');if(h&&!document.getElementById('bFull')){const b=document.createElement('button');b.id='bFull';b.type='button';b.className='hb';b.title=tt('Full view (Esc to go back)','फुल व्यू (वापस जाने के लिए Esc)');b.textContent=tt('Full view','फुल व्यू');h.insertBefore(b,h.firstChild)}}
+new MutationObserver(ensure).observe(document.body,{childList:true,subtree:true});setInterval(ensure,1500);ensure();
+})();
+
 /* ===== ULTRON AI COMMAND CENTER (its own tab; not part of Mission, Revenue or any other page) =====
    What is real here: every number comes from the loaded workbook (D / X). Open questions go to Claude through the page's `sample`
    capability, when the viewer allows it. What is not real: there is no live web access in this viewer, so news, global scores and
