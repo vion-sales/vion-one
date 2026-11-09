@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow"></head><body><title>VION Dashboard</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data: blob: https://pmsuryaghar.gov.in; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow"></head><body><title>VION Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Devanagari:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2534,6 +2534,7 @@ body.fv #brand.brand,body.fv #brand,body.fv .tick{display:none!important}
  body #hctl>#tsb{order:3}
  body #hctl>#bTheme{order:4}
 }
+.rvlogo{margin:0 18px 6px;padding:12px 18px;background:#fff;border-radius:14px;box-shadow:0 0 0 1px rgba(10,27,77,.12);display:flex;justify-content:center;align-items:center;min-height:70px}.rvlogo img{display:block;height:auto;width:min(100%,380px);max-height:110px;object-fit:contain}.rvlogo b{color:#0a1b4d;font-size:18px}
 @media(max-width:700px){.rvh{padding:12px 14px 6px}.rvu{margin-left:14px}.rvk,.rvc,.rvt,.rvn{padding-left:14px;padding-right:14px}.rvk .v{font-size:18px}}
 `;document.head.appendChild(st);
 
@@ -2606,10 +2607,10 @@ function strip(pg,x,S){
   risk:[tt('Risk & Opportunity','जोखिम और अवसर'),[[tt('Critical risks','गंभीर जोखिम'),x.crit,'',C.red],[tt('All risks','सभी जोखिम'),x.risks.length,'',C.orange],[tt('Opportunities','अवसर'),x.opps.length,'',C.green],[tt('Silent 30+ days','30+ दिन शांत'),x.silent.length,tt('distributors','डिस्ट्रीब्यूटर'),C.purple]]],
   act:[tt('Actions','कार्रवाई'),[[tt('Open actions','खुली कार्रवाई'),open,'',C.blue],[tt('Done','पूर्ण'),x.acts.length-open,'',C.green],[tt('Total','कुल'),x.acts.length,'',C.cyan]]],
   qa:[tt('Data QA','डेटा QA'),[[tt('Warnings','चेतावनी'),x.qa.warn,'',C.orange],[tt('Issues','समस्याएँ'),x.qa.bad,'',C.red],[tt('Data to','डेटा तक'),fmtD(D.asof,{day:'2-digit',month:'short'}),'',C.cyan]]],
-  mnre:[tt('MNRE Vendors','MNRE वेंडर'),null],subs:[tt('Subsidy','सब्सिडी'),null]
+  mnre:[tt('MNRE Vendors','MNRE वेंडर'),null],subs:[tt('Subsidy','सब्सिडी'),'LOGO']
  }[pg];
  if(!T)return '';
- const tiles=T[1]?`<div class="rvk">${T[1].map(t=>tile(t[0],t[1],t[2],t[3])).join('')}</div>`:'';
+ const tiles=T[1]==='LOGO'?`<div class="rvlogo"><img src="https://pmsuryaghar.gov.in/assets/images/website/PMSuryaGharLogo.svg" alt="PM Surya Ghar: Muft Bijli Yojana" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><b style="display:none">PM Surya Ghar: Muft Bijli Yojana</b></div><div class="rvn">${tt('Official logo of the scheme (Government of India), loaded from pmsuryaghar.gov.in.','योजना का आधिकारिक लोगो (भारत सरकार), pmsuryaghar.gov.in से।')}</div>`:T[1]?`<div class="rvk">${T[1].map(t=>tile(t[0],t[1],t[2],t[3])).join('')}</div>`:'';
  return shell(pg,'s-rv'+pg,T[0],tt('Business review view','बिज़नेस रिव्यू व्यू'),tiles);
 }
 
