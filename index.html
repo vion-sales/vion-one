@@ -1022,7 +1022,7 @@ function teamHTML(x){
  const spot=`<div class="spot"><div style="--c:${C.cyan}"><div class="k">${ic('trophy')}${tt('Best team (ASM)','बेस्ट टीम (ASM)')}</div><b>${esc(best.a)}</b><small>${per==='T'?pct(best.ach)+tt(' of target',' लक्ष्य का'):L_(best.nsv)+tt(' all months',' सभी महीने')}</small></div><div style="--c:${C.purple}"><div class="k">${ic('globe')}${tt('Best region','बेस्ट क्षेत्र')}</div><b>${esc((stateP[0]||{s:'—'}).s)}</b><small>${L_((stateP[0]||{v:0}).v)} · ${perLabel()}</small></div><div style="--c:${C.pink}"><div class="k">${ic('box')}${tt('Best product','बेस्ट प्रोडक्ट')}</div><b>${esc(sk?sk.n:'—')}</b><small>${sk?f0(sk.u)+tt(' units billed (scheme period)',' यूनिट (स्कीम अवधि)'):''}</small></div><div style="--c:${C.green}"><div class="k">${ic('star')}${tt('Top performer','टॉप परफ़ॉर्मर')}</div><b>${topD?esc(topD.name):'—'}</b><small>${topD?(x.hist?L_(periodVal(topD)):pct(topD.ach/Math.max(.01,topD.tgt))+tt(' of target',' लक्ष्य का')):''}</small></div></div>`;
  const row=z=>{const sil=z.l.filter(d=>d.code&&d.last&&days(d.last)>=30).length,nb=z.l.filter(d=>d.tgt>0&&d.ach===0).length,st=z.m.T>0?paceSt(z.m.pi):[tt('No target','लक्ष्य नहीं'),'लक्ष्य नहीं',C.mut],pv=sum(z.l.map(periodVal));
   return `<tr><td class="t"><span style="display:inline-flex;align-items:center;gap:8px"><i style="width:10px;height:10px;border-radius:3px;background:${ASMC[z.a]};display:inline-block"></i><b>${esc(z.a)}</b></span><small>${z.act} ${tt('of','में से')} ${z.codes} ${tt('active','सक्रिय')} · ${sil} ${tt('silent','चुप')} · ${nb} ${tt('not billed this month','इस महीने बिल नहीं')}</small></td><td class="n" data-l="${tt('Target','लक्ष्य')}">${L_(z.m.T)}</td><td class="n" data-l="${tt('Achieved','हासिल')}">${L_(z.m.A)}</td><td class="n" data-l="%"><b style="color:var(--hi)">${pct(z.m.ach)}</b></td><td data-l="${tt('Pace','रफ़्तार')}"><span class="pill" style="--c:${st[2]}">${st[i]}</span></td><td class="n" data-l="${x.hist?perLabel():tt('All months','सभी महीने')}">${L_(x.hist?pv:z.nsv)}</td><td data-l="${tt('Trend','रुझान')}"><canvas class="spk" data-asm="${esc(z.a)}" width="120" height="30" aria-hidden="true" style="width:120px;height:30px"></canvas></td></tr>`};
- return sec('s-team',tt('Team performance','टीम परफ़ॉर्मेंस'),tt('ASM scorecard for the target month','लक्ष्य महीने का ASM स्कोरकार्ड'),`${spot}<div class="tw"><table class="tbl stack"><thead><tr><th>ASM</th><th class="n">${tt('Target','लक्ष्य')}</th><th class="n">${tt('Achieved','हासिल')}</th><th class="n">%</th><th>${tt('Pace','रफ़्तार')}</th><th class="n">${x.hist?perLabel():tt('All months','सभी महीने')}</th><th>${tt('NSV trend','NSV रुझान')}</th></tr></thead><tbody>${lead.map(row).join('')}</tbody></table></div>`,
+ return sec('s-team',tt('Team performance','टीम परफ़ॉर्मेंस'),'',`${spot}`,
   [tt(`${best.a} leads with ${per==='T'?pct(best.ach):L_(best.nsv)}; ${worst.a} is last with ${per==='T'?pct(worst.ach):L_(worst.nsv)}.`,`${best.a} आगे (${per==='T'?pct(best.ach):L_(best.nsv)}); ${worst.a} सबसे पीछे (${per==='T'?pct(worst.ach):L_(worst.nsv)})।`),tt(`The spread between best and last is ${per==='T'?((best.ach-worst.ach)*100).toFixed(1)+' points':L_(best.nsv-worst.nsv)}.`,`सबसे आगे और सबसे पीछे का अंतर ${per==='T'?((best.ach-worst.ach)*100).toFixed(1)+' पॉइंट':L_(best.nsv-worst.nsv)}।`),tt(`Pair ${worst.a} with ${best.a} for a joint distributor-visit week.`,`${worst.a} को ${best.a} के साथ संयुक्त डिस्ट्रीब्यूटर-विज़िट सप्ताह पर लगाएँ।`)]);
 }
 function heatHTML(x){
@@ -1474,7 +1474,6 @@ function scoreHTML(x){
   <div class="sch-v"><span class="sch-big" id="scBig">${pct(ar)}</span><span class="sch-of">${tt('of target','लक्ष्य का')}</span>${scBadge(z.st)}</div>
   <div class="sch-bar" role="img" aria-label="${tt('Achieved','हासिल')} ${pct(ar)}, ${tt('pace','रफ़्तार')} ${Math.round(pp*100)}%, ${tt('forecast','पूर्वानुमान')} ${pct(fr)}">
    <i class="f" style="--w:${w(ar)};--c:${z.st.c}"></i><i class="fc" style="--w:${w(fr)}"></i><b class="pk" style="--x:${w(pp)}"><em>${tt('Pace','रफ़्तार')} ${Math.round(pp*100)}%</em></b></div>
-  <div class="sch-st"><div><span>${tt('Billed so far','अब तक बिल')}</span><b>${L_(z.A)}</b></div><div><span>${tt('Forecast','पूर्वानुमान')}</span><b>${L_(m.end)}</b></div><div><span>${tt('Needed / day','रोज़ ज़रूरी')}</span><b>${m.left>0?L_(m.pace):'—'}</b></div><div><span>${tt('Days left','बाकी दिन')}</span><b>${m.left}</b></div></div>
   <div class="sch-leg"><span><i style="--c:${z.st.c}"></i>${tt('Achieved','हासिल')} ${L_(z.A)}</span><span><i class="dsh"></i>${tt('Forecast','पूर्वानुमान')} ${L_(m.end)}</span><span>${tt('Target','लक्ष्य')} ${L_(z.T)}</span></div>
  </div><ul class="sch-r">${ins.map(([i,c,t])=>`<li><span class="sci" style="--c:${c}">${ic(i)}</span><p>${t}</p></li>`).join('')}</ul></section>`;
 
@@ -1507,9 +1506,8 @@ function scoreHTML(x){
   <div class="sca-bar"><div class="scp lg"><i style="--w:${w(a.r)};--c:${a.st.c}"></i><b style="--x:${w(pp)}"></b></div><span class="sca-p">${a.t>0?pct(a.r):'—'}</span></div>
   <div class="sca-f"><span>${scBadge(a.st)}<em>${a.b}/${a.n} ${tt('billed','बिल')}</em></span>${spk(a.mon,col,96,28)}</div></div>`}).join('')}</div></section>`;
 
- const bridge=`<section class="sec" id="s-scb"><header><h2>${tt('Where the target stands','लक्ष्य की स्थिति')}</h2><span class="hs">${tt('target bridge and distributor activation','लक्ष्य ब्रिज और डिस्ट्रीब्यूटर सक्रियता')}</span></header>
- <div class="scb-g"><div class="scb-c"><h3>${tt('Achieved by ASM → gap → target','ASM से हासिल → अंतर → लक्ष्य')}</h3><p class="scb-s">${tt('₹ lakh incl GST','₹ लाख GST सहित')}</p><div class="scb-cv"><canvas id="cScW" role="img" aria-label="${tt('Target bridge chart','लक्ष्य ब्रिज चार्ट')}"></canvas></div></div>
- <div class="scb-c"><h3>${tt('Activation funnel','सक्रियता फ़नल')}</h3><p class="scb-s">${tt('where distributors drop out before reaching pace','रफ़्तार तक पहुँचने से पहले कहाँ छूटते हैं')}</p><div class="scb-cv"><canvas id="cScF" role="img" aria-label="${tt('Distributor activation funnel','डिस्ट्रीब्यूटर सक्रियता फ़नल')}"></canvas></div></div></div></section>`;
+ const bridge=`<section class="sec" id="s-scb">
+ <div class="scb-g" style="grid-template-columns:minmax(0,1fr)"><div class="scb-c"><h3>${tt('Activation funnel','सक्रियता फ़नल')}</h3><p class="scb-s">${tt('where distributors drop out before reaching pace','रफ़्तार तक पहुँचने से पहले कहाँ छूटते हैं')}</p><div class="scb-cv"><canvas id="cScF" role="img" aria-label="${tt('Distributor activation funnel','डिस्ट्रीब्यूटर सक्रियता फ़नल')}"></canvas></div></div></div></section>`;
 
  const chips=[['all',tt('All','सभी')],['bh',tt('Behind','पीछे')],['nb',tt('Not billed','बिल नहीं')],['nt',tt('No target','लक्ष्य नहीं')]];
  const cnt=k=>k==='all'?z.rows.length:z.rows.filter(r=>r.s[0]===k).length;
@@ -1532,7 +1530,7 @@ function scoreHTML(x){
  ${acts.length?`<div class="scx-g">${acts.map((r,i)=>{const k=r.d.name,dn=!!done[k];return `<label class="scx-c${dn?' dn':''}" style="--ac:${ASMC[r.d.asm]||C.cyan}"><input type="checkbox" data-scx="${esc(k)}"${dn?' checked':''}><span class="scx-n">${i+1}</span>
   <div class="scx-b"><b>${esc(k)}</b><p>${actOf(r)}</p><small><span class="adot" style="--c:${ASMC[r.d.asm]||C.mut}"></span>${esc(r.d.asm||'—')} · ${tt('due','नियत')} ${fmtD(due.toISOString().slice(0,10),{day:'2-digit',month:'short'})}</small></div><span class="scx-g2">${L_(r.gap)}</span></label>`}).join('')}</div>`:`<p class="mut">${tt('No open gaps.','कोई अंतर नहीं।')}</p>`}</section>`;
  X.SC=z;
- return head+kpis+asm+bridge+tbl+act;
+ return head+kpis+asm+bridge+tbl;
 }
 function afterScore(x){
  const z=x.SC;if(!z)return;
@@ -2122,8 +2120,7 @@ function distsHTML(){
  const ds=[...dd.values()].sort((a,b)=>b.v-a.v),mx=Math.max(1,...ds.map(o=>o.v));
  const stT=[...ss.values()].sort((a,b)=>b.v-a.v).map((z,i)=>`<div class="kpi" style="--c:${[C.cyan,C.purple,C.orange][i%3]}"><div class="k">${esc(z.n==='—'?tt('Not in distributor master','डिस्ट्रीब्यूटर मास्टर में नहीं'):z.n)}</div><div class="v">₹${f2(nsvL(z.v))} L</div><div class="s">${tot>0?(z.v/tot*100).toFixed(1):'0.0'}% ${tt('of NSV','NSV का')}</div><div class="lnbar"><i style="width:${tot>0?Math.max(0,Math.min(100,z.v/tot*100)):0}%"></i></div></div>`).join('');
  const rows=ds.slice(0,25).map((o,i)=>`<div class="lnrow"><span class="nm" title="${esc(o.n)}">${i+1}. ${esc(o.n)} <span class="sub2">· ${esc(o.st)}</span></span><span class="tr"><i style="width:${Math.max(0,o.v/mx*100)}%"></i></span><span class="vv">₹${f2(nsvL(o.v))} L · ${tot>0?(o.v/tot*100).toFixed(1):'0.0'}%</span></div>`).join('');
- const body=`${bar()}<div class="lnk">${stT}</div><div class="lnh">${tt('Top districts by NSV','NSV के अनुसार टॉप ज़िले')}</div><div class="lnbars">${rows||`<p class="note">${tt('No sales in this period.','इस अवधि में बिक्री नहीं।')}</p>`}</div>
- <p class="lnn">${tt('Districts follow the distributor–ASM mapping used in this dashboard. NSV is signed net sales (credits and cancellations included).','ज़िले इस डैशबोर्ड की डिस्ट्रीब्यूटर–ASM मैपिंग के अनुसार हैं। NSV में क्रेडिट और कैंसिलेशन शामिल हैं।')}</p>`;
+ const body=`${bar()}<div class="lnk">${stT}</div><p class="lnn">${tt('Districts follow the distributor–ASM mapping used in this dashboard. NSV is signed net sales (credits and cancellations included).','ज़िले इस डैशबोर्ड की डिस्ट्रीब्यूटर–ASM मैपिंग के अनुसार हैं। NSV में क्रेडिट और कैंसिलेशन शामिल हैं।')}</p>`;
  return sec('s-dists',tt('Districts','ज़िले'),tt('Where the billing comes from','बिलिंग कहाँ से आती है'),body);
 }
 
