@@ -2361,7 +2361,7 @@ document.addEventListener('change',e=>{
 /* ===== Tab bar arrows: previous / next, so tabs beyond the screen edge can be reached ===== */
 (function(){
 const st=document.createElement('style');st.id='tabArrowCss';st.textContent=`
-.tabArr{position:absolute;z-index:6;display:none;align-items:center;border:0;cursor:pointer;color:var(--hi);font:700 20px var(--body);padding:0 12px;background:linear-gradient(to var(--d,right),transparent,var(--card) 60%)}
+.tabArr{display:none!important}.tabs{flex-wrap:wrap;overflow:visible;row-gap:0}.tabs button{padding:8px 11px 10px}@media(max-width:560px){.tabs button{padding:7px 9px 9px;font-size:12px;gap:5px}.brand{position:static!important}}.tabArrX{position:absolute;z-index:6;display:none;align-items:center;border:0;cursor:pointer;color:var(--hi);font:700 20px var(--body);padding:0 12px;background:linear-gradient(to var(--d,right),transparent,var(--card) 60%)}
 .tabArr.show{display:flex}#tabPrev{--d:left;justify-content:flex-start}#tabNext{--d:right;justify-content:flex-end}
 .tabArr span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1px solid var(--line2);background:var(--card2)}
 .tabArr:hover span{border-color:var(--cyan)}`;
