@@ -2525,6 +2525,14 @@ const st=document.createElement('style');st.id='rvCss';st.textContent=`
 }
 @media(min-width:700px) and (max-width:1099px){body{padding-left:232px!important}body.fv{padding-left:0!important}body #brand.brand{width:232px}body #tabs.tabs button{padding:10px 11px!important;font-size:13.5px!important;flex-direction:row!important;text-align:left!important;justify-content:flex-start!important}.wrap,.tick{min-width:0}}
 body #hctl #bPresent,body #bPresent,body #mPresent{display:none!important}
+@media(min-width:700px){
+ body #hctl>*{order:20}
+ body #hctl>#bFull{order:0}
+ body #hctl>.sel:has(#selAsm),body #hctl>.sel:has(.terrb){order:1}
+ body #hctl>.sel:has(#selPer){order:2}
+ body #hctl>#tsb{order:3}
+ body #hctl>#bTheme{order:4}
+}
 @media(max-width:700px){.rvh{padding:12px 14px 6px}.rvu{margin-left:14px}.rvk,.rvc,.rvt,.rvn{padding-left:14px;padding-right:14px}.rvk .v{font-size:18px}}
 `;document.head.appendChild(st);
 
