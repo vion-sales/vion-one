@@ -2296,7 +2296,7 @@ function mnreHTML(){
  let body;
  if(MV.view==='d'){
   const A=G.dists.filter(o=>MV.st==='All'||o.s===MV.st).sort((a,b)=>b.p-a.p);
-  body=`<div class="tw"><table class="tbl gvt"><thead><tr><th class="n">#</th><th>${tt('District','ज़िला')}</th><th class="n">${tt('Vendors listed','वेंडर')}</th><th class="n">kWp*</th><th class="n">${tt('Projects','प्रोजेक्ट')}*</th><th class="n">Vikram</th></tr></thead><tbody>${A.map((o,i)=>`<tr><td class="n">${i+1}</td><td class="t">${esc(o.d)}<small>${esc(o.s)} · ${esc(o.asm?o.asm.split(' ')[0]:tt('No ASM yet','ASM तय नहीं'))}</small></td><td class="n">${o.n}</td><td class="n">${f0(o.kw)}</td><td class="n">${f0(o.p)}</td><td class="n">${o.vk}</td></tr>`).join('')}</tbody></table></div>
+  body=`<div class="tw"><table class="tbl gvt"><thead><tr><th class="n">#</th><th>${tt('District','ज़िला')}</th><th class="n">${tt('Vendors listed','वेंडर')}</th><th class="n">kWp*</th><th class="n">${tt('Projects','प्रोजेक्ट')}*</th><th class="n">Vikram</th></tr></thead><tbody>${A.map((o,i)=>`<tr><td class="n">${i+1}</td><td class="t">${esc(o.d)}<small>${esc(o.s)} · ${esc(o.asm?o.asm.split(' ')[0]:tt('No ASM','ASM तय नहीं'))}</small></td><td class="n">${o.n}</td><td class="n">${f0(o.kw)}</td><td class="n">${f0(o.p)}</td><td class="n">${o.vk}</td></tr>`).join('')}</tbody></table></div>
   <p class="gvn">${tt('Districts shown are those in your territory. Vendors are ranked by projects within each district.','यहाँ आपके क्षेत्र के ज़िले दिख रहे हैं। हर ज़िले में वेंडर प्रोजेक्ट के हिसाब से क्रमबद्ध हैं।')}</p>`;
  }else{
   const S=L.slice().sort((a,b)=>b.p-a.p||b.kw-a.kw),pages=Math.max(1,Math.ceil(S.length/MV.PS));MV.pg=Math.min(MV.pg,pages-1);
