@@ -1,0 +1,29 @@
+{
+ "checked": "2026-11-09T07:42:04.725735+00:00",
+ "sources": [
+  {
+   "name": "PM Surya Ghar portal",
+   "url": "https://pmsuryaghar.gov.in/",
+   "ok": false,
+   "hash": null,
+   "title": "",
+   "changed": null
+  },
+  {
+   "name": "Consumer application",
+   "url": "https://consumer.pmsuryaghar.gov.in/consumer/",
+   "ok": false,
+   "hash": null,
+   "title": "",
+   "changed": null
+  },
+  {
+   "name": "SURYA Gujarat portal",
+   "url": "https://suryagujarat.guvnl.in/",
+   "ok": false,
+   "hash": null,
+   "title": "",
+   "changed": null
+  }
+ ]
+}
