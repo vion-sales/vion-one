@@ -2770,7 +2770,7 @@ function boot(){const b=$('boot');if(!b)return;let seen=false;try{seen=sessionSt
   const w=document.createElement('div');w.id='vlog';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-labelledby','vlogt');
   w.innerHTML=`<form class="vcard" id="vform" novalidate>
    <div class="vbr"><b>VION Sales Intelligence</b><span>Visibility. Accountability. Growth.</span></div>
-   <div class="vlg">${logo?`<img alt="PowerHive" src="${esc(logo)}">`:''}<div><h1 id="vlogt">${T('Sign in','साइन इन')}</h1><p class="vsub">${T('Sign in to see your territory','अपना क्षेत्र देखने के लिए साइन इन करें')}</p></div></div>
+   <div class="vlg"><div><h1 id="vlogt">${T('Sign in','साइन इन')}</h1><p class="vsub">${T('Sign in to see your territory','अपना क्षेत्र देखने के लिए साइन इन करें')}</p></div></div>
    <label for="vid">${T('Login ID','लॉगिन ID')}</label><input id="vid" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
    <label for="vpw">${T('Password','पासवर्ड')}</label><div class="vpw"><input id="vpw" type="password" name="password" autocomplete="current-password" required><button type="button" id="vshow">${T('Show','दिखाएँ')}</button></div>
    <button class="vgo" type="submit" id="vgo">${T('Sign in','साइन इन')}</button>
