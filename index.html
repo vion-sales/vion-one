@@ -2174,6 +2174,7 @@ Object.assign(IC,{
  solar:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/>',
  mnre:'<path d="M12 3 4 6v6c0 4.5 3.2 7.6 8 9 4.8-1.4 8-4.5 8-9V6z"/><path d="m8.5 12 2.4 2.4 4.6-4.8"/>',
  subs:'<path d="M6.5 5h11"/><path d="M6.5 9.5h11"/><path d="M6.5 5h3.8a3.6 3.6 0 0 1 0 7.2H6.5l7.8 7"/>'});
+{const ai=PAGES.findIndex(z=>z[0]==='all');if(ai>=0)PAGES.splice(ai,1)}
 PAGES.push(['mnre','MNRE Vendors','MNRE वेंडर','mnre'],['subs','Subsidy','सब्सिडी','subs']);
 
 const st=document.createElement('style');st.id='gvCss';st.textContent=`
@@ -2385,8 +2386,8 @@ setInterval(sync,1500);setTimeout(sync,500);
 /* ===== Tab bar: all tabs on one line on desktop/laptop (no sideways scrolling) ===== */
 (function(){const c=document.createElement('style');c.id='tabFitCss';c.textContent=`
 @media(min-width:1000px){
-.tabs{flex-wrap:nowrap;justify-content:space-between;gap:0}
-.tabs button{flex:1 1 auto;min-width:0;justify-content:center;padding:9px 5px 11px;font-size:12px;gap:4px}
+.tabs{flex-wrap:nowrap;justify-content:flex-start;gap:0}
+.tabs button{flex:1 1 auto;min-width:0;justify-content:center;padding:9px 4px 11px;font-size:12.5px;gap:5px}
 .tabs button svg{width:15px;height:15px;flex:none}
 .tabs .bd2{min-width:17px;padding:0 5px;font-size:10px}}
 .tabs button .bd2{margin-left:2px}
