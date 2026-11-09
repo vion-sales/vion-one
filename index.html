@@ -2167,6 +2167,194 @@ document.addEventListener('click',e=>{
 document.addEventListener('input',e=>{if(e.target&&e.target.id==='docQ'){dQ=e.target.value;dPg=0;swap('s-docs',true)}});
 })();
 
+/* ===== Govt tabs at the end: Solar, MNRE Vendors, Subsidy. Data: govt.json (MNRE vendor import) + govt_status.json (daily Govt watch) ===== */
+(function(){
+Object.assign(PGOF,{'s-solar':'solar','s-mnre':'mnre','s-subs':'subs'});
+Object.assign(IC,{
+ solar:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/>',
+ mnre:'<path d="M12 3 4 6v6c0 4.5 3.2 7.6 8 9 4.8-1.4 8-4.5 8-9V6z"/><path d="m8.5 12 2.4 2.4 4.6-4.8"/>',
+ subs:'<path d="M12 3v18"/><path d="M16.5 7.5c-.7-1.3-2.2-2-4.5-2-2.6 0-4.2 1.1-4.2 2.9 0 4.3 8.9 1.6 8.9 6 0 1.8-1.8 3.1-4.5 3.1-2.4 0-4.1-.9-4.7-2.4"/>'});
+PAGES.push(['solar','Solar','सोलर','solar'],['mnre','MNRE Vendors','MNRE वेंडर','mnre'],['subs','Subsidy','सब्सिडी','subs']);
+
+const st=document.createElement('style');st.id='gvCss';st.textContent=`
+.gvg{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:0 0 14px}
+.gvg label{display:flex;flex-direction:column;gap:4px;font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.gvg input,.gvg select,.gvf input,.gvf select{background:var(--card2);color:var(--fg);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;font:500 13px var(--body);min-width:0;width:100%}
+.gvf{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}.gvf>*{flex:1 1 150px;min-width:0}
+.gvk{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:0 0 14px}
+.gvk .v{font-size:22px}
+.gvw{border:1px solid var(--line2);border-radius:12px;padding:10px 12px;margin:0 0 14px;font-size:12.5px;color:var(--txt2);background:color-mix(in srgb,var(--cyan) 7%,var(--card2));line-height:1.5}
+.gvw b{color:var(--hi)}
+.gvw.chg{border-color:var(--orange);background:color-mix(in srgb,var(--orange) 12%,var(--card2))}
+.gvl{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0}
+.gvl a{display:inline-block;padding:6px 11px;border-radius:999px;border:1px solid var(--line2);color:var(--hi);text-decoration:none;font:600 12px var(--body);background:var(--card2)}
+.gvl a:hover{border-color:var(--cyan)}
+.gvh{font:500 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:18px 0 8px}
+.gvn{font-size:12px;color:var(--mut);margin-top:12px;line-height:1.5}
+.gvr{display:grid;grid-template-columns:minmax(110px,170px) 1fr auto;gap:10px;align-items:center;font-size:13px;margin:5px 0}
+.gvr .nm{color:var(--hi);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gvr.vk .nm{color:var(--cyan);font-weight:700}
+.gvr .tr{height:10px;border-radius:5px;background:var(--tint);overflow:hidden}.gvr .tr i{display:block;height:100%;border-radius:5px;background:var(--c,var(--cyan))}
+.gvr .vv{font:500 12.5px var(--mono);color:var(--txt2);white-space:nowrap}
+.gvpg{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:12px;font-size:12.5px;color:var(--txt2)}
+.gvt td.t small{display:block;color:var(--mut);font-size:11px}
+.gvres{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:6px 0 0}
+@media(max-width:560px){.gvr{grid-template-columns:1fr auto}.gvr .tr{grid-column:1/-1;order:3}}`;
+document.head.appendChild(st);
+
+/* ---------- constants (from the Smart Energy site, last checked there on 25 Oct 2026) ---------- */
+const LINKS=[
+ ['PM Surya Ghar portal','पीएम सूर्य घर पोर्टल','https://pmsuryaghar.gov.in/'],
+ ['Consumer application','उपभोक्ता आवेदन','https://consumer.pmsuryaghar.gov.in/consumer/'],
+ ['SURYA Gujarat portal','सूर्य गुजरात पोर्टल','https://suryagujarat.guvnl.in/']];
+const SUBS={ // [state,cat,kW] -> [central,state,total,customer,benchmark]
+ 'GJ|gen|1':[32400,16200,48600,5400,54000],'GJ|gen|2':[62800,33600,96400,10720,107200],
+ 'GJ|sc|1':[32400,18900,51300,2700,54000],'GJ|sc|2':[62800,38960,101760,5360,107200]};
+const CEN3=78000,ASOF='25 Oct 2026';
+const INR=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const BCOL=['#2563EB','#7C3AED','#F59E0B','#16A34A','#EA580C','#0891B2','#DB2777','#64748B','#0EA5E9','#E11D48','#8B5CF6','#84CC16','#14B8A6'];
+
+/* ---------- data loading (same-origin JSON, loaded only when a Govt tab is opened) ---------- */
+let G=null,GS=null,gErr=false,gLoading=false,sErr=false;
+const FN={};
+function loadG(){
+ if(G||gLoading||gErr)return;gLoading=true;
+ fetch('govt.json?v='+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json()}).then(j=>{G=prep(j);gLoading=false;redraw()}).catch(()=>{gErr=true;gLoading=false;redraw()});
+}
+function loadS(){
+ if(GS||sErr)return;
+ fetch('govt_status.json?v='+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json()}).then(j=>{GS=j;redraw()}).catch(()=>{sErr=true;redraw()});
+}
+function prep(j){
+ const rows=[],uniq=new Set(),sts=new Set();
+ j.d.forEach(([s,d,more,rs])=>{sts.add(s);rs.forEach(r=>{uniq.add(r[0].toUpperCase());rows.push({s,d,n:r[0],b:r[1],r:r[2],rc:r[3],kw:r[4],p:r[5]})})});
+ j.rows=rows;j.uniq=uniq.size;j.sts=[...sts].sort();
+ j.dists=j.d.map(([s,d,more,rs])=>({s,d,more,n:rs.length,kw:sum(rs.map(r=>r[4]||0)),p:sum(rs.map(r=>r[5]||0)),vk:rs.filter(r=>r[1].includes(9)).length}));
+ return j;
+}
+const loadingBox=id=>sec(id,id==='s-solar'?'Solar':id==='s-mnre'?'MNRE Vendors':'Subsidy','',`<p class="gvn">${gErr?tt('Govt data file could not be loaded. Please refresh the page.','सरकारी डेटा फ़ाइल लोड नहीं हो सकी। पेज रिफ्रेश करें।'):tt('Loading Govt data…','सरकारी डेटा लोड हो रहा है…')}</p>`);
+const linkRow=()=>`<div class="gvl">${LINKS.map(l=>`<a href="${l[2]}" target="_blank" rel="noopener noreferrer">${tt(l[0],l[1])} ↗</a>`).join('')}</div>`;
+const impDate=()=>G&&G.imported?new Date(G.imported).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',timeZone:'Asia/Kolkata'}):'';
+
+/* ---------- Solar: rooftop calculator + brand mix ---------- */
+const SC={bill:2500,tar:6,yld:120,cost:54000,roof:'',state:'GJ',cat:'gen',bst:'All'};
+function calc(){
+ const tar=+SC.tar||6,yl=+SC.yld||120,bill=+SC.bill||0,cpk=+SC.cost||54000;const units=bill/tar,need=units/yl;
+ let kw=Math.max(1,Math.ceil(need-1e-9));const roofKw=SC.roof?Math.floor(SC.roof/10):null;let capped=false;
+ if(roofKw!==null&&roofKw<kw){kw=Math.max(0,roofKw);capped=true}
+ if(kw<1)return {kw:0,capped,units,need};
+ const cost=kw*cpk,gen=kw*yl*12,sav=Math.min(gen,units*12)*tar;
+ let sub=null,note='';
+ if(kw>=3&&(SC.state==='GJ'||SC.state==='MP'))sub=CEN3;
+ else if(SC.state==='GJ'&&SUBS['GJ|'+SC.cat+'|'+kw])sub=SUBS['GJ|'+SC.cat+'|'+kw][2];
+ else note=tt('Subsidy for this size/state is not listed here yet. Confirm on the official portal.','इस साइज़/राज्य की सब्सिडी यहाँ अभी सूचीबद्ध नहीं है। आधिकारिक पोर्टल पर जाँचें।');
+ const net=cost-(sub||0);
+ return {kw,cost,gen,sav,sub,net,note,capped,units,need,panels:Math.ceil(kw*1000/540),roof:kw*10,pay:sav>0?net/sav:0};
+}
+function brandMix(){
+ const rows=G.rows.filter(r=>SC.bst==='All'||r.s===SC.bst);
+ const cnt=G.brands.map(()=>0);let any=0;rows.forEach(r=>{if(r.b.length)any++;r.b.forEach(i=>cnt[i]++)});
+ const arr=cnt.map((c,i)=>({n:G.brands[i],c,i})).filter(o=>o.c>0).sort((a,b)=>b.c-a.c);const mx=Math.max(1,...arr.map(o=>o.c));
+ return {arr,mx,rows:rows.length,any};
+}
+function solarHTML(){
+ loadG();if(!G)return loadingBox('s-solar');
+ const r=calc(),m=brandMix();
+ const inp=(k,l,t='number',x='')=>`<label>${l}<input data-sc="${k}" type="${t}" value="${SC[k]}" ${x}></label>`;
+ const res=r.kw<1?`<p class="gvn">${tt('The roof area is too small for a 1 kW system (about 10 m² per kW is needed).','1 kW सिस्टम के लिए छत का क्षेत्र कम है (प्रति kW लगभग 10 m² चाहिए)।')}</p>`:`<div class="gvres">
+ <div class="kpi" style="--c:#2563EB"><div class="k">${tt('Suggested size','सुझाया साइज़')}</div><div class="v">${r.kw} kW</div><div class="s">${r.panels} ${tt('panels of 540 Wp','540 Wp के पैनल')} · ${r.roof} m²${r.capped?' · '+tt('limited by roof','छत से सीमित'):''}</div></div>
+ <div class="kpi" style="--c:#16A34A"><div class="k">${tt('Yearly generation','वार्षिक उत्पादन')}</div><div class="v">${f0(r.gen)} ${tt('units','यूनिट')}</div><div class="s">${tt('saves','बचत')} ${INR(r.sav)} ${tt('a year','प्रति वर्ष')}</div></div>
+ <div class="kpi" style="--c:#F59E0B"><div class="k">${tt('System cost','सिस्टम लागत')}</div><div class="v">${INR(r.cost)}</div><div class="s">${tt('subsidy','सब्सिडी')} ${r.sub!==null?INR(r.sub):'—'}</div></div>
+ <div class="kpi" style="--c:#7C3AED"><div class="k">${tt('You pay / payback','आपका खर्च / वापसी')}</div><div class="v">${INR(r.net)}</div><div class="s">${r.pay?r.pay.toFixed(1)+' '+tt('years','वर्ष'):'—'}</div></div></div>${r.note?`<p class="gvn">${r.note}</p>`:''}`;
+ const calcH=`<div class="gvh">${tt('Rooftop sizing and savings','रूफटॉप साइज़िंग और बचत')}</div>
+ <div class="gvg">${inp('bill',tt('Monthly bill (₹)','मासिक बिल (₹)'),'number','min="0" step="100"')}${inp('tar',tt('Tariff (₹ / unit)','टैरिफ़ (₹ / यूनिट)'),'number','min="1" step="0.1"')}
+ <label>${tt('State','राज्य')}<select data-sc="state"><option value="GJ" ${SC.state==='GJ'?'selected':''}>Gujarat</option><option value="MP" ${SC.state==='MP'?'selected':''}>Madhya Pradesh</option><option value="OT" ${SC.state==='OT'?'selected':''}>${tt('Other','अन्य')}</option></select></label>
+ <label>${tt('Category','श्रेणी')}<select data-sc="cat"><option value="gen" ${SC.cat==='gen'?'selected':''}>${tt('General','सामान्य')}</option><option value="sc" ${SC.cat==='sc'?'selected':''}>SC / ST</option></select></label>
+ ${inp('roof',tt('Roof area (m², optional)','छत क्षेत्र (m², वैकल्पिक)'),'number','min="0" step="1" placeholder="—"')}${inp('yld',tt('Units per kW per month','यूनिट प्रति kW प्रति माह'),'number','min="60" step="5"')}${inp('cost',tt('Cost per kW (₹)','लागत प्रति kW (₹)'),'number','min="30000" step="1000"')}</div>${res}
+ <p class="gvn">${tt('Assumptions: about 120 units per kW per month (4 kWh a day), 540 Wp panels, 10 m² roof per kW, benchmark cost ₹54,000 per kW. Size is rounded up to whole kW. Subsidy figures are in the Subsidy tab. This is an estimate, not a quotation.','मान्यताएँ: लगभग 120 यूनिट प्रति kW प्रति माह (4 kWh रोज़), 540 Wp पैनल, प्रति kW 10 m² छत, बेंचमार्क लागत ₹54,000 प्रति kW। साइज़ पूरे kW में ऊपर गोल किया गया है। सब्सिडी Subsidy टैब में है। यह अनुमान है, कोटेशन नहीं।')}</p>`;
+ const bars=m.arr.map(o=>`<div class="gvr ${o.i===9?'vk':''}"><span class="nm">${esc(o.n)}</span><span class="tr"><i style="width:${o.c/m.mx*100}%;--c:${o.i===9?'#2563EB':'#94A3B8'}"></i></span><span class="vv">${f0(o.c)} · ${(o.c/m.rows*100).toFixed(1)}%</span></div>`).join('');
+ const mixH=`<div class="gvh">${tt('Solar brand mix among registered vendors','पंजीकृत वेंडरों में सोलर ब्रांड मिक्स')}</div>
+ <div class="gvf"><select data-sc="bst"><option value="All">${tt('All states','सभी राज्य')}</option>${G.sts.map(s=>`<option ${SC.bst===s?'selected':''}>${esc(s)}</option>`).join('')}</select></div>${bars}
+ <p class="gvn">${tt('Counts vendor-district listings that name the brand as a partner on the MNRE portal (a vendor can name several brands). ','MNRE पोर्टल पर जिस वेंडर-ज़िला लिस्टिंग में ब्रांड पार्टनर के रूप में दर्ज है उसकी गिनती (एक वेंडर कई ब्रांड दे सकता है)। ')}${m.any} ${tt('of','में से')} ${m.rows} ${tt('listings name a brand.','लिस्टिंग में ब्रांड दर्ज है।')}</p>`;
+ return sec('s-solar',tt('Solar','सोलर'),tt('Rooftop calculator and brand mix','रूफटॉप कैलकुलेटर और ब्रांड मिक्स'),calcH+mixH);
+}
+
+/* ---------- MNRE Vendors ---------- */
+const MV={view:'v',st:'All',d:'All',b:'All',q:'',pg:0,PS:20};
+function mnreHTML(){
+ loadG();if(!G)return loadingBox('s-mnre');
+ const ds=[...new Set(G.rows.filter(r=>MV.st==='All'||r.s===MV.st).map(r=>r.d))].sort();
+ if(MV.d!=='All'&&!ds.includes(MV.d))MV.d='All';
+ const q=MV.q.trim().toLowerCase();
+ const L=G.rows.filter(r=>(MV.st==='All'||r.s===MV.st)&&(MV.d==='All'||r.d===MV.d)&&(MV.b==='All'||r.b.includes(+MV.b))&&(!q||r.n.toLowerCase().includes(q)));
+ const kpis=`<div class="gvk"><div class="kpi" style="--c:#2563EB"><div class="k">${tt('Registered vendors','पंजीकृत वेंडर')}</div><div class="v">${f0(G.uniq)}</div><div class="s">${G.dists.length} ${tt('districts','ज़िले')}</div></div>
+ <div class="kpi" style="--c:#16A34A"><div class="k">${tt('Vendor-district listings','वेंडर-ज़िला लिस्टिंग')}</div><div class="v">${f0(G.rows.length)}</div><div class="s">${tt('a vendor can serve several districts','एक वेंडर कई ज़िलों में हो सकता है')}</div></div>
+ <div class="kpi" style="--c:#F59E0B"><div class="k">${tt('Vikram Solar partners','विक्रम सोलर पार्टनर')}</div><div class="v">${G.rows.filter(r=>r.b.includes(9)).length}</div><div class="s">${tt('vendor-district listings','वेंडर-ज़िला लिस्टिंग')}</div></div></div>`;
+ const chips=`<div class="lnb"><button class="chip" data-mv="v" aria-pressed="${MV.view==='v'}">${tt('Vendors','वेंडर')}</button><button class="chip" data-mv="d" aria-pressed="${MV.view==='d'}">${tt('Districts','ज़िले')}</button></div>`;
+ let body;
+ if(MV.view==='d'){
+  const A=G.dists.filter(o=>MV.st==='All'||o.s===MV.st).sort((a,b)=>b.p-a.p);
+  body=`<div class="tw"><table class="tbl gvt"><thead><tr><th class="n">#</th><th>${tt('District','ज़िला')}</th><th class="n">${tt('Vendors listed','वेंडर')}</th><th class="n">kWp*</th><th class="n">${tt('Projects','प्रोजेक्ट')}*</th><th class="n">Vikram</th></tr></thead><tbody>${A.map((o,i)=>`<tr><td class="n">${i+1}</td><td class="t">${esc(o.d)}<small>${esc(o.s)}</small></td><td class="n">${o.n}${o.more?'+':''}</td><td class="n">${f0(o.kw)}</td><td class="n">${f0(o.p)}</td><td class="n">${o.vk}</td></tr>`).join('')}</tbody></table></div>
+  <p class="gvn">${tt('Each district lists its top 200 vendors by projects; “+” means the portal has more than that.','हर ज़िले में प्रोजेक्ट के हिसाब से टॉप 200 वेंडर हैं; “+” का मतलब पोर्टल पर इससे ज़्यादा हैं।')}</p>`;
+ }else{
+  const S=L.slice().sort((a,b)=>b.p-a.p||b.kw-a.kw),pages=Math.max(1,Math.ceil(S.length/MV.PS));MV.pg=Math.min(MV.pg,pages-1);
+  const pg=S.slice(MV.pg*MV.PS,MV.pg*MV.PS+MV.PS);
+  body=`<div class="gvf"><input id="gvQ" data-mvq placeholder="${tt('Search vendor','वेंडर खोजें')}" value="${esc(MV.q)}"><select data-mvs="st"><option value="All">${tt('All states','सभी राज्य')}</option>${G.sts.map(s=>`<option ${MV.st===s?'selected':''}>${esc(s)}</option>`).join('')}</select><select data-mvs="d"><option value="All">${tt('All districts','सभी ज़िले')}</option>${ds.map(s=>`<option ${MV.d===s?'selected':''}>${esc(s)}</option>`).join('')}</select><select data-mvs="b"><option value="All">${tt('All brands','सभी ब्रांड')}</option>${G.brands.map((s,i)=>`<option value="${i}" ${String(MV.b)===String(i)?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+  <div class="tw"><table class="tbl gvt"><thead><tr><th class="n">#</th><th>${tt('Vendor','वेंडर')}</th><th>${tt('Brands','ब्रांड')}</th><th class="n">${tt('Rating','रेटिंग')}</th><th class="n">kWp*</th><th class="n">${tt('Projects','प्रोजेक्ट')}*</th></tr></thead><tbody>${pg.map((r,i)=>`<tr><td class="n">${MV.pg*MV.PS+i+1}</td><td class="t">${esc(r.n)}<small>${esc(r.d)} · ${esc(r.s)}</small></td><td>${r.b.length?r.b.map(x=>esc(G.brands[x])).join(', '):'—'}</td><td class="n">${r.r!=null?r.r+' ('+f0(r.rc||0)+')':'—'}</td><td class="n">${f0(r.kw)}</td><td class="n">${f0(r.p)}</td></tr>`).join('')||`<tr><td colspan="6" class="t">${tt('No vendors match.','कोई वेंडर नहीं मिला।')}</td></tr>`}</tbody></table></div>
+  <div class="gvpg"><button class="chip" data-mvp="-1" ${MV.pg===0?'disabled':''}>‹ ${tt('Prev','पिछला')}</button><span>${f0(S.length)} ${tt('listings','लिस्टिंग')} · ${tt('Page','पेज')} ${MV.pg+1} / ${pages}</span><button class="chip" data-mvp="1" ${MV.pg>=pages-1?'disabled':''}>${tt('Next','अगला')} ›</button></div>`;
+ }
+ const src=`<p class="gvn">${tt('Source: official MNRE portal (pmsuryaghar.gov.in), imported ','स्रोत: आधिकारिक MNRE पोर्टल (pmsuryaghar.gov.in), आयात ')}${impDate()}. ${tt('Public data only. * kWp and projects are the figures as imported from the portal listing, not verified by VION. Rating is the public Google rating with review count in brackets.','केवल सार्वजनिक डेटा। * kWp और प्रोजेक्ट पोर्टल लिस्टिंग से आयातित आँकड़े हैं, VION द्वारा सत्यापित नहीं। रेटिंग सार्वजनिक Google रेटिंग है, कोष्ठक में रिव्यू संख्या।')}</p>${linkRow()}`;
+ return sec('s-mnre',tt('MNRE Vendors','MNRE वेंडर'),tt('Government-registered rooftop solar vendors','सरकार-पंजीकृत रूफटॉप सोलर वेंडर'),kpis+chips+body+src);
+}
+
+/* ---------- Subsidy + Govt watch ---------- */
+function watchHTML(){
+ if(!GS||!GS.sources){return `<div class="gvw"><b>${tt('Govt watch','सरकारी निगरानी')}</b> · ${tt('The daily check of the official portals has not reported yet. Until then, figures below are as last confirmed on ','आधिकारिक पोर्टलों की रोज़ की जाँच की रिपोर्ट अभी नहीं आई। तब तक नीचे के आँकड़े अंतिम पुष्टि के अनुसार हैं: ')}${ASOF}.</div>`}
+ const fmt=s=>s?new Date(s).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Kolkata'}):'—';
+ const recent=GS.sources.filter(s=>s.changed&&(Date.now()-new Date(s.changed))<30*864e5);
+ return `<div class="gvw ${recent.length?'chg':''}"><b>${tt('Govt watch','सरकारी निगरानी')}</b> · ${tt('last checked','अंतिम जाँच')} ${fmt(GS.checked)}.
+ ${recent.length?`<br><b>${tt('Update detected on the official portal. Please verify the figures below before quoting them:','आधिकारिक पोर्टल पर बदलाव मिला। उद्धृत करने से पहले नीचे के आँकड़े जाँचें:')}</b> ${recent.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.name)}</a> (${fmt(s.changed)})`).join(', ')}`:`<br>${tt('No change detected on the official portals.','आधिकारिक पोर्टलों पर कोई बदलाव नहीं मिला।')}`}
+ <br>${GS.sources.map(s=>`${esc(s.name)}: ${s.ok?tt('reachable','उपलब्ध'):tt('not reachable','उपलब्ध नहीं')}`).join(' · ')}</div>`;
+}
+function subsHTML(){
+ loadS();
+ const row=(l,k)=>{const a=SUBS[k];return `<tr><td class="t">${l}</td><td class="n">${INR(a[0])}</td><td class="n">${INR(a[1])}</td><td class="n"><b>${INR(a[2])}</b></td><td class="n">${INR(a[3])}</td><td class="n">${INR(a[4])}</td></tr>`};
+ const tb=`<div class="gvh">${tt('Gujarat: 1 kW and 2 kW (central + state)','गुजरात: 1 kW और 2 kW (केंद्र + राज्य)')}</div><div class="tw"><table class="tbl gvt"><thead><tr><th>${tt('System','सिस्टम')}</th><th class="n">${tt('Central','केंद्र')}</th><th class="n">${tt('Gujarat','गुजरात')}</th><th class="n">${tt('Total subsidy','कुल सब्सिडी')}</th><th class="n">${tt('You contribute','आपका योगदान')}</th><th class="n">${tt('Benchmark cost','बेंचमार्क लागत')}</th></tr></thead><tbody>
+ ${row('1 kW · '+tt('General','सामान्य'),'GJ|gen|1')}${row('2 kW · '+tt('General','सामान्य'),'GJ|gen|2')}${row('1 kW · SC / ST','GJ|sc|1')}${row('2 kW · SC / ST','GJ|sc|2')}</tbody></table></div>`;
+ const k3=`<div class="gvk" style="margin-top:14px"><div class="kpi" style="--c:#16A34A"><div class="k">${tt('3 kW and above','3 kW और उससे ऊपर')}</div><div class="v">${INR(CEN3)}</div><div class="s">${tt('Central subsidy, fixed. Gujarat and Madhya Pradesh. State subsidy, if any, is extra.','केंद्र सब्सिडी, तय। गुजरात और मध्य प्रदेश। राज्य सब्सिडी, यदि हो, अलग।')}</div></div>
+ <div class="kpi" style="--c:#F59E0B"><div class="k">Madhya Pradesh</div><div class="v">3 kW+</div><div class="s">${tt('1 kW and 2 kW figures are not listed yet. Check the portal.','1 kW और 2 kW के आँकड़े अभी सूचीबद्ध नहीं। पोर्टल देखें।')}</div></div>
+ <div class="kpi" style="--c:#64748B"><div class="k">${tt('Other states','अन्य राज्य')}</div><div class="v">—</div><div class="s">${tt('Not covered here. Use the state portal.','यहाँ शामिल नहीं। राज्य पोर्टल देखें।')}</div></div></div>`;
+ const steps=`<div class="gvh">${tt('How to apply','आवेदन कैसे करें')}</div><p class="gvn" style="margin-top:0">${tt('1 Register · 2 Site inspection · 3 Installation by a registered vendor · 4 DISCOM approval · 5 Subsidy credited. Eligibility: residential consumer, valid electricity connection, rooftop available, DISCOM approval, registered vendor.','1 रजिस्टर · 2 साइट निरीक्षण · 3 पंजीकृत वेंडर से इंस्टॉलेशन · 4 DISCOM मंज़ूरी · 5 सब्सिडी जमा। पात्रता: आवासीय उपभोक्ता, वैध बिजली कनेक्शन, उपलब्ध छत, DISCOM मंज़ूरी, पंजीकृत वेंडर।')}</p>`;
+ const foot=`<p class="gvn">${tt('Figures taken from the Smart Energy site (vion-smart-energy.github.io), last checked there on ','आँकड़े Smart Energy साइट (vion-smart-energy.github.io) से, वहाँ अंतिम जाँच ')}${ASOF}. ${tt('Always confirm the final amount on pmsuryaghar.gov.in before quoting a customer.','ग्राहक को बताने से पहले अंतिम राशि pmsuryaghar.gov.in पर ज़रूर जाँचें।')}</p>${linkRow()}`;
+ return sec('s-subs',tt('Subsidy','सब्सिडी'),tt('PM Surya Ghar Muft Bijli Yojana','पीएम सूर्य घर मुफ़्त बिजली योजना'),watchHTML()+tb+k3+steps+foot);
+}
+
+FN['s-solar']=solarHTML;FN['s-mnre']=mnreHTML;FN['s-subs']=subsHTML;
+const _q2=qaHTML;qaHTML=function(x){return _q2(x)+solarHTML()+mnreHTML()+subsHTML()};
+
+function swap(id){
+ const el=document.getElementById(id);if(!el)return;
+ const t=document.createElement('div');t.innerHTML=FN[id]().replace(/<section([^>]*?) id="(s-[a-z]+)"/,(m_,pre,i)=>`<section${pre} id="${i}" data-pg="${PGOF[i]}"`);
+ const n=t.firstElementChild;n.classList.toggle('pgx',el.classList.contains('pgx'));el.replaceWith(n);
+}
+function redraw(){Object.keys(FN).forEach(i=>swap(i))}
+const keep=(id,fn)=>{const a=document.activeElement,sel=a&&a.id,p=a&&a.selectionStart;fn();if(sel){const e=document.getElementById(sel);if(e){e.focus();try{e.setSelectionRange(p,p)}catch(_){}}}};
+document.addEventListener('click',e=>{
+ const t=e.target.closest&&e.target.closest('[data-mv],[data-mvp]');if(!t)return;
+ if(t.dataset.mv){MV.view=t.dataset.mv;MV.pg=0}else MV.pg=Math.max(0,MV.pg+ +t.dataset.mvp);swap('s-mnre');
+});
+document.addEventListener('input',e=>{
+ const t=e.target;if(!t||!t.dataset)return;
+ if(t.dataset.mvq!==undefined){MV.q=t.value;MV.pg=0;keep('s-mnre',()=>swap('s-mnre'))}
+ else if(t.dataset.sc&&t.tagName==='INPUT'){SC[t.dataset.sc]=t.type==='number'?(t.value===''?'':+t.value):t.value;
+  const k=t.dataset.sc,p=t.selectionStart;swap('s-solar');const n=document.querySelector('[data-sc="'+k+'"]');if(n){n.focus();try{n.setSelectionRange(p,p)}catch(_){}}}
+});
+document.addEventListener('change',e=>{
+ const t=e.target;if(!t||!t.dataset)return;
+ if(t.dataset.sc&&t.tagName==='SELECT'){SC[t.dataset.sc]=t.value;swap('s-solar')}
+ else if(t.dataset.mvs){MV[t.dataset.mvs]=t.value;MV.pg=0;if(t.dataset.mvs==='st')MV.d='All';swap('s-mnre')}
+});
+})();
+
 /* ===== ULTRON AI COMMAND CENTER (its own tab; not part of Mission, Revenue or any other page) =====
    What is real here: every number comes from the loaded workbook (D / X). Open questions go to Claude through the page's `sample`
    capability, when the viewer allows it. What is not real: there is no live web access in this viewer, so news, global scores and
