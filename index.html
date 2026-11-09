@@ -2732,6 +2732,7 @@ function boot(){const b=$('boot');if(!b)return;let seen=false;try{seen=sessionSt
  const st=document.createElement('style');st.textContent=`
 #vlog{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));background:radial-gradient(1200px 600px at 20% 0%,#16327A 0%,#081226 55%,#050B18 100%);overflow:auto}
 #vlog .vcard{width:100%;max-width:380px;background:rgba(255,255,255,.04);border:1px solid rgba(148,163,184,.25);border-radius:18px;padding:28px 24px;color:#E6ECF7;box-shadow:0 30px 80px rgba(0,0,0,.45);font:14px 'IBM Plex Sans',system-ui,sans-serif}
+#vlog .vbr{text-align:center;margin:0 0 20px;padding-bottom:16px;border-bottom:1px solid rgba(148,163,184,.2)}#vlog .vbr b{display:block;font:700 22px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.01em;color:#fff}#vlog .vbr span{display:block;margin-top:6px;font:600 11.5px 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#F59E0B}
 #vlog .vlg{display:flex;align-items:center;gap:12px;margin-bottom:18px}#vlog .vlg img{height:34px;background:#fff;border-radius:8px;padding:4px 8px}
 #vlog h1{margin:0;font:700 22px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.02em;color:#fff}#vlog .vsub{margin:2px 0 0;color:#9FB0CF;font-size:12.5px}
 #vlog label{display:block;margin-top:14px;font:600 11px 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:#9FB0CF}
@@ -2768,6 +2769,7 @@ function boot(){const b=$('boot');if(!b)return;let seen=false;try{seen=sessionSt
   const logo=(document.querySelector('img.lv')||{}).src||'';
   const w=document.createElement('div');w.id='vlog';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-labelledby','vlogt');
   w.innerHTML=`<form class="vcard" id="vform" novalidate>
+   <div class="vbr"><b>VION Sales Intelligence</b><span>Visibility. Accountability. Growth.</span></div>
    <div class="vlg">${logo?`<img alt="PowerHive" src="${esc(logo)}">`:''}<div><h1 id="vlogt">${T('Sign in','साइन इन')}</h1><p class="vsub">${T('Sign in to see your territory','अपना क्षेत्र देखने के लिए साइन इन करें')}</p></div></div>
    <label for="vid">${T('Login ID','लॉगिन ID')}</label><input id="vid" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
    <label for="vpw">${T('Password','पासवर्ड')}</label><div class="vpw"><input id="vpw" type="password" name="password" autocomplete="current-password" required><button type="button" id="vshow">${T('Show','दिखाएँ')}</button></div>
