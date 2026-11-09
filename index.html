@@ -2198,6 +2198,7 @@ const st=document.createElement('style');st.id='gvCss';st.textContent=`
 .gvr .vv{font:500 12.5px var(--mono);color:var(--txt2);white-space:nowrap}
 .gvpg{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:12px;font-size:12.5px;color:var(--txt2)}
 .gvt td.t small{display:block;color:var(--mut);font-size:11px}
+.gvwarn{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px;padding:13px 16px;border-radius:12px;border:1.5px solid #F59E0B;border-left-width:6px;background:linear-gradient(90deg,rgba(245,158,11,.22),rgba(245,158,11,.07));color:var(--hi);font-size:14.5px;line-height:1.4;box-shadow:0 0 0 0 rgba(245,158,11,.5);animation:gvPulse 2.4s ease-in-out infinite}.gvwarn:before{content:'⚠';font-size:20px;color:#F59E0B}.gvwarn b{flex:1 1 260px}.gvwarn a{font-weight:700;color:#F59E0B;text-decoration:none;border:1px solid #F59E0B;border-radius:999px;padding:5px 12px;white-space:nowrap}@keyframes gvPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.35)}50%{box-shadow:0 0 14px 2px rgba(245,158,11,.45)}}@media(prefers-reduced-motion:reduce){.gvwarn{animation:none}}
 .gvres{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:6px 0 0}
 @media(max-width:560px){.gvr{grid-template-columns:1fr auto}.gvr .tr{grid-column:1/-1;order:3}}`;
 document.head.appendChild(st);
@@ -2205,8 +2206,12 @@ document.head.appendChild(st);
 /* ---------- constants (from the Smart Energy site, last checked there on 25 Oct 2026) ---------- */
 const LINKS=[
  ['PM Surya Ghar portal','पीएम सूर्य घर पोर्टल','https://pmsuryaghar.gov.in/'],
- ['Consumer application','उपभोक्ता आवेदन','https://consumer.pmsuryaghar.gov.in/consumer/'],
- ['SURYA Gujarat portal','सूर्य गुजरात पोर्टल','https://suryagujarat.guvnl.in/']];
+ ['Registered vendors (national list)','पंजीकृत वेंडर (राष्ट्रीय सूची)','https://pmsuryaghar.gov.in/#/registered-vendors'],
+ ['Scheme guidelines','योजना दिशानिर्देश','https://pmsuryaghar.gov.in/#/knowledge-center/scheme-guidelines'],
+ ['FAQs','अक्सर पूछे जाने वाले प्रश्न','https://pmsuryaghar.gov.in/#/faq'],
+ ['SURYA Gujarat portal','सूर्य गुजरात पोर्टल','https://suryagujarat.guvnl.in/'],
+ ['GEDA (Gujarat Energy Development Agency)','GEDA (गुजरात ऊर्जा विकास एजेंसी)','https://geda.gujarat.gov.in/'],
+ ['MNRE','MNRE','https://mnre.gov.in/']];
 const SUBS={ // [state,cat,kW] -> [central,state,total,customer,benchmark]
  'GJ|gen|1':[32400,16200,48600,5400,54000],'GJ|gen|2':[62800,33600,96400,10720,107200],
  'GJ|sc|1':[32400,18900,51300,2700,54000],'GJ|sc|2':[62800,38960,101760,5360,107200]};
@@ -2328,8 +2333,9 @@ function subsHTML(){
  <div class="kpi" style="--c:#F59E0B"><div class="k">Madhya Pradesh</div><div class="v">3 kW+</div><div class="s">${tt('1 kW and 2 kW figures are not listed yet. Check the portal.','1 kW और 2 kW के आँकड़े अभी सूचीबद्ध नहीं। पोर्टल देखें।')}</div></div>
  <div class="kpi" style="--c:#64748B"><div class="k">${tt('Other states','अन्य राज्य')}</div><div class="v">—</div><div class="s">${tt('Not covered here. Use the state portal.','यहाँ शामिल नहीं। राज्य पोर्टल देखें।')}</div></div></div>`;
  const steps=`<div class="gvh">${tt('How to apply','आवेदन कैसे करें')}</div><p class="gvn" style="margin-top:0">${tt('1 Register · 2 Site inspection · 3 Installation by a registered vendor · 4 DISCOM approval · 5 Subsidy credited. Eligibility: residential consumer, valid electricity connection, rooftop available, DISCOM approval, registered vendor.','1 रजिस्टर · 2 साइट निरीक्षण · 3 पंजीकृत वेंडर से इंस्टॉलेशन · 4 DISCOM मंज़ूरी · 5 सब्सिडी जमा। पात्रता: आवासीय उपभोक्ता, वैध बिजली कनेक्शन, उपलब्ध छत, DISCOM मंज़ूरी, पंजीकृत वेंडर।')}</p>`;
- const foot=`<p class="gvn">${tt('Figures taken from the Smart Energy site (vion-smart-energy.github.io), last checked there on ','आँकड़े Smart Energy साइट (vion-smart-energy.github.io) से, वहाँ अंतिम जाँच ')}${ASOF}. ${tt('Always confirm the final amount on pmsuryaghar.gov.in before quoting a customer.','ग्राहक को बताने से पहले अंतिम राशि pmsuryaghar.gov.in पर ज़रूर जाँचें।')}</p>${linkRow()}`;
- return sec('s-subs',tt('Subsidy','सब्सिडी'),tt('PM Surya Ghar Muft Bijli Yojana','पीएम सूर्य घर मुफ़्त बिजली योजना'),watchHTML()+tb+k3+steps+foot);
+ const foot=`<p class="gvn">${tt('Figures taken from the Smart Energy site (vion-smart-energy.github.io), last checked there on ','आँकड़े Smart Energy साइट (vion-smart-energy.github.io) से, वहाँ अंतिम जाँच ')}${ASOF}.</p><div class="gvh">${tt('Useful links','उपयोगी लिंक')}</div>${linkRow()}<p class="gvn">${tt('PM Surya Ghar toll-free helpline: 15555.','पीएम सूर्य घर टोल-फ्री हेल्पलाइन: 15555।')}</p>`;
+ const warn=`<div class="gvwarn"><b>${tt('Always confirm the final amount on pmsuryaghar.gov.in before quoting a customer.','ग्राहक को बताने से पहले अंतिम राशि pmsuryaghar.gov.in पर ज़रूर जाँचें।')}</b><a href="https://pmsuryaghar.gov.in/" target="_blank" rel="noopener">pmsuryaghar.gov.in ↗</a></div>`;
+ return sec('s-subs',tt('Subsidy','सब्सिडी'),tt('PM Surya Ghar Muft Bijli Yojana','पीएम सूर्य घर मुफ़्त बिजली योजना'),warn+watchHTML()+tb+k3+steps+foot);
 }
 
 FN['s-mnre']=mnreHTML;FN['s-subs']=subsHTML;
@@ -2610,7 +2616,7 @@ function strip(pg,x,S){
   mnre:[tt('MNRE Vendors','MNRE वेंडर'),null],subs:[tt('Subsidy','सब्सिडी'),'LOGO']
  }[pg];
  if(!T)return '';
- const tiles=T[1]==='LOGO'?`<div class="rvlogo"><img src="https://pmsuryaghar.gov.in/assets/images/website/PMSuryaGharLogo.svg" alt="PM Surya Ghar: Muft Bijli Yojana" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><b style="display:none">PM Surya Ghar: Muft Bijli Yojana</b></div><div class="rvn">${tt('Official logo of the scheme (Government of India), loaded from pmsuryaghar.gov.in.','योजना का आधिकारिक लोगो (भारत सरकार), pmsuryaghar.gov.in से।')}</div>`:T[1]?`<div class="rvk">${T[1].map(t=>tile(t[0],t[1],t[2],t[3])).join('')}</div>`:'';
+ const tiles=T[1]==='LOGO'?`<div class="rvlogo"><a href="https://pmsuryaghar.gov.in/" target="_blank" rel="noopener" title="pmsuryaghar.gov.in" style="display:flex;justify-content:center;width:100%"><img src="https://pmsuryaghar.gov.in/assets/images/website/PMSuryaGharLogo.svg" alt="PM Surya Ghar: Muft Bijli Yojana" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><b style="display:none">PM Surya Ghar: Muft Bijli Yojana</b></a></div><div class="rvn">${tt('Official logo of the scheme (Government of India). Tap it to open the PM Surya Ghar portal, pmsuryaghar.gov.in.','योजना का आधिकारिक लोगो (भारत सरकार)। पीएम सूर्य घर पोर्टल, pmsuryaghar.gov.in खोलने के लिए लोगो पर टैप करें।')}</div>`:T[1]?`<div class="rvk">${T[1].map(t=>tile(t[0],t[1],t[2],t[3])).join('')}</div>`:'';
  return shell(pg,'s-rv'+pg,T[0],tt('Business review view','बिज़नेस रिव्यू व्यू'),tiles);
 }
 
