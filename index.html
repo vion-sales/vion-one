@@ -2474,6 +2474,17 @@ const st=document.createElement('style');st.id='rvCss';st.textContent=`
 #fvPill [data-fv="x"]:before{content:'';position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,236,120,.75),transparent);transform:skewX(-20deg);animation:fvShine 2.2s ease-in-out infinite;pointer-events:none}
 #fvPill [data-fv="x"]:hover{transform:scale(1.06);filter:brightness(1.15)}
 @media(prefers-reduced-motion:reduce){#fvPill [data-fv="x"],#fvPill [data-fv="x"]:before{animation:none!important}}
+
+@media(max-width:560px){
+ #brand.brand{display:contents!important}
+ #brand .bt{background:var(--card);border-radius:0 0 14px 14px;padding:10px 12px}
+ #tabs.tabs{position:sticky!important;top:env(safe-area-inset-top,0px);z-index:60;background:var(--card);border-bottom:2px solid var(--orange);box-shadow:0 6px 18px rgba(0,0,0,.35);margin:6px calc(-1*max(16px,env(safe-area-inset-left,0px))) 8px!important;padding:4px 6px!important;border-radius:0 0 12px 12px;max-width:none}
+ body.tstk #tabs.tabs{grid-template-columns:repeat(6,minmax(0,1fr))!important;padding:2px 4px!important}
+ body.tstk #tabs.tabs button{font-size:0!important;gap:0!important;padding:6px 0!important;min-height:34px;justify-content:center}
+ body.tstk #tabs.tabs button svg{width:18px;height:18px;margin:0}
+ body.tstk #tabs.tabs .bd2{font-size:9px!important;position:absolute;top:0;right:2px;transform:scale(.85)}
+ body.tstk #tabs.tabs button{position:relative}
+}
 @media(max-width:700px){.rvh{padding:12px 14px 6px}.rvu{margin-left:14px}.rvk,.rvc,.rvt,.rvn{padding-left:14px;padding-right:14px}.rvk .v{font-size:18px}}
 `;document.head.appendChild(st);
 
@@ -2567,6 +2578,8 @@ function apply(x){
   applyPage();
  }catch(e){console.error('rv',e)}
 }
+
+{const f=()=>{try{const y=(window.scrollY||0)>140&&window.innerWidth<=560;document.body.classList.toggle('tstk',y)}catch(_){}};addEventListener('scroll',f,{passive:true});addEventListener('resize',f)}
 const _r=render;render=function(){_r.apply(this,arguments);apply(X)};
 })();
 
