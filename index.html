@@ -2600,18 +2600,24 @@ function distBody(S){
 }
 
 /* ---- JCP (visits) ---- */
+let JM=null;
+const jmv=()=>JM===null?(per==='ALL'?'ALL':String(pIdx())):JM;
+const jLbl=()=>jmv()==='ALL'?tt('All months','सभी महीने'):D.months[+jmv()];
 function jcpBody(S){
- const J=(D.jcp&&D.jcp.asm)||[];const by={};J.forEach(r=>by[r[0]]=r);
+ const v=jmv(),mk=v==='ALL'?null:D.mkeys[+v];
+ const J=(D.jcp&&(mk&&D.jcp.m?D.jcp.m[mk]:D.jcp.asm))||[];
+ const opts=`<option value="ALL"${v==='ALL'?' selected':''}>${tt('All months','सभी महीने')}</option>`+D.months.map((m,i)=>i<=cur?`<option value="${i}"${String(i)===v?' selected':''}>${esc(m)}</option>`:'').join('');
+ const sel=`<div class="rvk" style="grid-template-columns:minmax(200px,320px);padding-bottom:6px"><div style="--c:var(--orange)"><div class="k">${tt('JCP month','JCP महीना')}</div><select id="jcpMon" style="margin-top:6px;width:100%;height:36px;border-radius:9px;border:1px solid var(--line2);background:var(--card);color:var(--hi);padding:0 10px;font:600 14px inherit">${opts}</select></div></div>`;const by={};J.forEach(r=>by[r[0]]=r);
  const R=S.asms.map(a=>{const r=by[a]||[a,0,0,0,0,0];return {a,asmV:+r[1]||0,rsm:+r[2]||0,svc:+r[3]||0,tot:+r[4]||(+r[1]||0)+(+r[2]||0)+(+r[3]||0),acc:+r[5]||0}});
  const T={asmV:sum(R.map(r=>r.asmV)),rsm:sum(R.map(r=>r.rsm)),svc:sum(R.map(r=>r.svc)),tot:sum(R.map(r=>r.tot)),acc:sum(R.map(r=>r.acc))};
  const none=!T.tot;
- const k=`<div class="rvk">${tile(tt('ASM visits','ASM विज़िट'),f0(T.asmV),perLbl(),C.cyan)}${tile(tt('RSM own visits','RSM की अपनी विज़िट'),f0(T.rsm),'',C.blue)}${tile(tt('Total visits','कुल विज़िट'),f0(T.tot),tt('ASM + RSM own + service','ASM + RSM + सर्विस'),C.green)}${tile(tt('Distinct accounts','अलग खाते'),f0(T.acc),'',C.orange)}</div>`;
+ const k=sel+`<div class="rvk">${tile(tt('ASM visits','ASM विज़िट'),f0(T.asmV),jLbl(),C.cyan)}${tile(tt('RSM own visits','RSM की अपनी विज़िट'),f0(T.rsm),'',C.blue)}${tile(tt('Total visits','कुल विज़िट'),f0(T.tot),tt('ASM + RSM own + service','ASM + RSM + सर्विस'),C.green)}${tile(tt('Distinct accounts','अलग खाते'),f0(T.acc),'',C.orange)}</div>`;
  const note=none?`<div class="gvwarn" style="margin:0 18px 14px;animation:none"><b>${tt('No JCP visits loaded yet. The source dashboard has no JCP workbook uploaded (0 visits). This tab fills as soon as the JCP Excel is available.','अभी कोई JCP विज़िट लोड नहीं है। स्रोत डैशबोर्ड पर JCP वर्कबुक अपलोड नहीं है (0 विज़िट)। JCP Excel मिलते ही यह टैब भर जाएगा।')}</b></div>`:'';
  const th=`<tr><th>${tt('Employee (ASM)','कर्मचारी (ASM)')}</th><th>${tt('ASM visits','ASM विज़िट')}</th><th>${tt('RSM own','RSM अपनी')}</th><th>${tt('Service','सर्विस')}</th><th>${tt('Total visits','कुल विज़िट')}</th><th>${tt('Distinct accounts','अलग खाते')}</th></tr>`;
  const rows=R.map(r=>`<tr><td class="l"><span class="rvd"><i style="background:${ASMC[r.a]}"></i><b>${esc(r.a)}</b></span></td><td>${f0(r.asmV)}</td><td>${f0(r.rsm)}</td><td>${f0(r.svc)}</td><td><b class="big">${f0(r.tot)}</b></td><td>${f0(r.acc)}</td></tr>`).join('');
  const trow=R.length>1?`<tr class="tot"><td class="l">${tt('Total','कुल')}</td><td>${f0(T.asmV)}</td><td>${f0(T.rsm)}</td><td>${f0(T.svc)}</td><td>${f0(T.tot)}</td><td>${f0(T.acc)}</td></tr>`:'';
  const dth=`<tr><th>${tt('SAP code','SAP कोड')}</th><th class="l">${tt('Distributor','डिस्ट्रीब्यूटर')}</th><th class="l">ASM</th><th>${tt('Visits','विज़िट')}</th><th>${tt('Last visit','अंतिम विज़िट')}</th><th>${tt('Bill value incl. GST ₹ L','बिल मूल्य (GST सहित) ₹ L')}</th></tr>`;
- const g=new Map();S.txs.forEach(t=>g.set(String(t.c),(g.get(String(t.c))||0)+t.g));
+ const g=new Map();D.tx.filter(t=>!mk||String(t.d).startsWith(mk)).forEach(t=>g.set(String(t.c),(g.get(String(t.c))||0)+t.g));
  const dl=(scope==='All'?D.dist:D.dist.filter(d=>d.asm===scope)).filter(d=>d.code);
  const drows=dl.map(d=>`<tr><td class="l">${esc(d.code)}</td><td class="l"><b>${esc(d.name)}</b><small>${esc(d.city||'')}</small></td><td class="l">${esc((d.asm||'').split(' ')[0])}</td><td>0</td><td>–</td><td>${lakh((g.get(String(d.code))||0)/1e5)}</td></tr>`).join('');
  return k+note+`<div class="rvt"><table>${th}${rows}${trow}</table></div><div class="gvh" style="padding:12px 18px 0">${tt('Distributor-wise visits','डिस्ट्रीब्यूटर-वार विज़िट')}</div><div class="rvt rvscr"><table>${dth}${drows}</table></div><div class="rvn">${tt('Visits come from the JCP Excel (Joint Call Plan visit dump). Bill value is shown beside each distributor for context.','विज़िट JCP Excel (जॉइंट कॉल प्लान विज़िट डंप) से आती हैं। संदर्भ के लिए हर डिस्ट्रीब्यूटर के साथ बिल मूल्य दिखाया गया है।')}</div>`;
@@ -2648,7 +2654,7 @@ function apply(x){
   pages.forEach(pg=>{
    if(pg==='psales')mk(pg,shell(pg,'s-rvdist',tt('Distributor wise performance','डिस्ट्रीब्यूटर-वार परफ़ॉर्मेंस'),tt('Total bill value incl. GST · ','कुल बिल मूल्य (GST सहित) · ')+perLbl(),distBody(S)));
    else if(pg==='team')mk(pg,shell(pg,'s-rvemp',tt('Employee wise performance','कर्मचारी-वार परफ़ॉर्मेंस'),tt('NSV ex-GST · ','NSV (GST के बिना) · ')+perLbl(),empBody(S)));
-   else if(pg==='jcp')mk(pg,shell(pg,'s-jcp',tt('JCP · Joint call plan visits','JCP · जॉइंट कॉल प्लान विज़िट'),perLbl(),jcpBody(S)));
+   else if(pg==='jcp')mk(pg,shell(pg,'s-jcp',tt('JCP · Joint call plan visits','JCP · जॉइंट कॉल प्लान विज़िट'),jLbl(),jcpBody(S)));
    else mk(pg,strip(pg,x,S));
   });
   applyPage();
@@ -2658,6 +2664,7 @@ function apply(x){
 {const f=()=>{try{const y=(window.scrollY||0)>140&&window.innerWidth<=560;document.body.classList.toggle('tstk',y)}catch(_){}};addEventListener('scroll',f,{passive:true});addEventListener('resize',f)}
 
 const _goTo=goTo;goTo=function(id){if(window.innerWidth<700)return _goTo(id);const e=$(id);if(!e)return;const p=e.dataset.pg;if(p&&page!=='all'&&p!==page)setPage(p,false);e.classList.remove('col');requestAnimationFrame(()=>{window.scrollTo({top:e.getBoundingClientRect().top+window.scrollY-12,behavior:RM()?'auto':'smooth'})})};
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='jcpMon'){JM=e.target.value;apply(X)}});
 const _r=render;render=function(){_r.apply(this,arguments);apply(X)};
 })();
 
