@@ -2654,7 +2654,7 @@ function apply(x){
   pages.forEach(pg=>{
    if(pg==='psales')mk(pg,shell(pg,'s-rvdist',tt('Distributor wise performance','डिस्ट्रीब्यूटर-वार परफ़ॉर्मेंस'),tt('Total bill value incl. GST · ','कुल बिल मूल्य (GST सहित) · ')+perLbl(),distBody(S)));
    else if(pg==='team')mk(pg,shell(pg,'s-rvemp',tt('Employee wise performance','कर्मचारी-वार परफ़ॉर्मेंस'),tt('NSV ex-GST · ','NSV (GST के बिना) · ')+perLbl(),empBody(S)));
-   else if(pg==='jcp')mk(pg,shell(pg,'s-jcp',tt('JCP · Joint call plan visits','JCP · जॉइंट कॉल प्लान विज़िट'),jLbl(),jcpBody(S)));
+   else if(pg==='jcp')mk(pg,shell(pg,'s-jcp',tt('JCP','JCP'),jLbl(),jcpBody(S)));
    else mk(pg,strip(pg,x,S));
   });
   applyPage();
