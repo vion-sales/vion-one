@@ -3178,7 +3178,8 @@ function boot(){const b=$('boot');if(!b)return;let seen=false;try{seen=sessionSt
  const st=document.createElement('style');st.textContent=`
 #vlog{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));background:radial-gradient(1200px 600px at 20% 0%,#16327A 0%,#081226 55%,#050B18 100%);overflow:auto}
 #vlog .vcard{width:100%;max-width:380px;background:rgba(255,255,255,.04);border:1px solid rgba(148,163,184,.25);border-radius:18px;padding:28px 24px;color:#E6ECF7;box-shadow:0 30px 80px rgba(0,0,0,.45);font:14px 'IBM Plex Sans',system-ui,sans-serif}
-#vlog .vbr{text-align:center;margin:0 0 20px;padding-bottom:16px;border-bottom:1px solid rgba(148,163,184,.2)}#vlog .vbr b{display:block;font:700 22px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.01em;color:#fff}#vlog .vbr span{display:block;margin-top:6px;font:600 11.5px 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#F59E0B}
+#vlog .vbr{text-align:center;margin:0 0 20px;padding-bottom:16px;border-bottom:1px solid rgba(148,163,184,.2)}#vlog .vbr .vphl{height:38px;margin-bottom:4px;background:#fff;border-radius:10px;padding:6px 12px;box-shadow:0 0 24px rgba(250,204,21,.25)}
+#vlog .vbr b{display:block;font:700 22px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.01em;color:#fff}#vlog .vbr span{display:block;margin-top:6px;font:600 11.5px 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#F59E0B}
 #vlog .vlg{display:flex;align-items:center;gap:12px;margin-bottom:18px}#vlog .vlg img{height:34px;background:#fff;border-radius:8px;padding:4px 8px}
 #vlog h1{margin:0;font:700 22px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.02em;color:#fff}#vlog .vsub{margin:2px 0 0;color:#9FB0CF;font-size:12.5px}
 #vlog label{display:block;margin-top:14px;font:600 11px 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:#9FB0CF}
@@ -3189,6 +3190,22 @@ function boot(){const b=$('boot');if(!b)return;let seen=false;try{seen=sessionSt
 #vlog .vgo[disabled]{opacity:.6;cursor:progress}
 #vlog .verr{min-height:18px;margin:12px 0 0;color:#FCA5A5;font-size:13px}
 #vlog .vhelp{margin:6px 0 0;color:#9FB0CF;font-size:12px}#vlog .vlang{margin-top:14px;background:none;border:0;color:#9FB0CF;text-decoration:underline;cursor:pointer;font-size:12px;padding:0}
+#vlog{background:radial-gradient(800px 600px at 50% 42%,#10204a 0%,#070d1f 55%,#05080f 100%)}
+#vlog:before{content:"";position:fixed;left:50%;top:50%;width:min(760px,150vw);aspect-ratio:1;margin:calc(min(760px,150vw)/-2) 0 0 calc(min(760px,150vw)/-2);border-radius:50%;background:conic-gradient(from 200deg,#facc15,#22c55e 35%,transparent 36%);-webkit-mask:radial-gradient(circle,transparent 46.5%,#000 47%,#000 48.2%,transparent 48.7%);mask:radial-gradient(circle,transparent 46.5%,#000 47%,#000 48.2%,transparent 48.7%);opacity:.85;filter:drop-shadow(0 0 14px #facc15);animation:vspin 26s linear infinite;pointer-events:none}
+#vlog:after{content:"";position:fixed;left:50%;top:50%;width:min(620px,122vw);aspect-ratio:1;margin:calc(min(620px,122vw)/-2) 0 0 calc(min(620px,122vw)/-2);border-radius:50%;border:1px dashed rgba(250,204,21,.3);pointer-events:none;animation:vspin 60s linear infinite reverse}
+@keyframes vspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#vlog:before,#vlog:after{animation:none}}
+#vlog .vcard{position:relative;z-index:1;max-width:390px;padding:34px 32px;border-radius:22px;background:rgba(8,14,32,.86);border:1px solid rgba(250,204,21,.4);box-shadow:0 0 60px rgba(250,204,21,.2),0 40px 80px #000;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+#vlog .vbr{text-align:left;border-bottom:0;margin:0 0 20px;padding:0}
+#vlog .vbr .vlogo{display:flex;align-items:center;gap:10px;color:#facc15}
+#vlog .vbr b{display:inline;font:700 21px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#fff}
+#vlog .vbr span{margin-top:8px;font:600 11px 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.3em;text-transform:uppercase;color:#7f93bd}
+#vlog h1{font-size:28px;letter-spacing:0}
+#vlog label{color:#facc15}
+#vlog input{background:#050a18;border:1px solid rgba(255,255,255,.15);border-radius:12px}
+#vlog input:focus{outline:2px solid #facc15}
+#vlog .vgo{border-radius:12px;background:linear-gradient(135deg,#facc15,#22c55e);color:#04200f;font-weight:800;box-shadow:0 0 30px rgba(250,204,21,.4)}
+#vlog .vpw button{color:#facc15}
 #vadm{position:fixed;inset:0;z-index:2147482000;background:rgba(3,8,20,.62);display:grid;place-items:start center;overflow:auto;padding:28px max(16px,env(safe-area-inset-right,0px)) 28px max(16px,env(safe-area-inset-left,0px))}
 #vadm .vbox{width:100%;max-width:860px;background:var(--card,#0F1B33);color:var(--fg,#E6ECF7);border:1px solid var(--line,rgba(148,163,184,.25));border-radius:16px;padding:20px;box-shadow:0 30px 80px rgba(0,0,0,.4);font:14px 'IBM Plex Sans',system-ui,sans-serif}
 #vadm h2{margin:0;font:700 18px 'IBM Plex Sans',sans-serif;color:var(--hi,#fff)}#vadm h3{margin:22px 0 8px;font:600 14px 'IBM Plex Sans',sans-serif;color:var(--hi,#fff)}
@@ -3215,8 +3232,8 @@ function boot(){const b=$('boot');if(!b)return;let seen=false;try{seen=sessionSt
   const logo=(document.querySelector('img.lv')||{}).src||'';
   const w=document.createElement('div');w.id='vlog';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-labelledby','vlogt');
   w.innerHTML=`<form class="vcard" id="vform" novalidate>
-   <div class="vbr"><b>VION Sales Intelligence</b><span>Visibility. Accountability. Growth.</span></div>
-   <div class="vlg"><div><h1 id="vlogt">${T('Sign in','साइन इन')}</h1><p class="vsub">${T('Sign in to see your territory','अपना क्षेत्र देखने के लिए साइन इन करें')}</p></div></div>
+   <div class="vbr"><div class="vlogo">${logo?`<img class="vphl" src="${logo}" alt="PowerHive">`:`<b>PowerHive</b>`}</div><span>Sales Intelligence</span></div>
+   <div class="vlg"><div><h1 id="vlogt">${T('Welcome back','वापसी पर स्वागत है')}</h1><p class="vsub">${T('Sign in to see your territory','अपना क्षेत्र देखने के लिए साइन इन करें')}</p></div></div>
    <label for="vid">${T('Login ID','लॉगिन ID')}</label><input id="vid" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
    <label for="vpw">${T('Password','पासवर्ड')}</label><div class="vpw"><input id="vpw" type="password" name="password" autocomplete="current-password" required><button type="button" id="vshow">${T('Show','दिखाएँ')}</button></div>
    <button class="vgo" type="submit" id="vgo">${T('Sign in','साइन इन')}</button>
