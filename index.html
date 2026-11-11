@@ -2920,6 +2920,143 @@ document.addEventListener('click',e=>{
 setTimeout(pgIn,400);
 })();
 
+/* p18: grouped sidebar, Nov Plan Tracker (plan vs ach, existing vs new, dormant revival, appointments), Distributor 360 */
+(function(){
+const R=window.__rv||{},lakh=R.lakh||f2,pill=R.pill,pcol=R.pcol||(r=>r>=1?C.green:r>=.5?C.orange:C.red);
+const g=1.18,short=a=>String(a||'').split(' ')[0];
+const NEWT=['Bhuj (Kutch)','Junagadh','Surat','Bhind','Gwalior','Ujjain','Katni','Rewa','Bhopal','Jabalpur'];
+const isNew=d=>!d.code&&NEWT.includes(d.name);
+const inScope=d=>d.name&&!/^Billing from/.test(d.name)&&(scope==='All'||d.asm===scope);
+let D3=null;try{D3=localStorage.getItem('vion-d360')}catch(e){}
+let APPT={};try{APPT=JSON.parse(localStorage.getItem('vion-appt')||'{}')}catch(e){}
+const svA=()=>{try{localStorage.setItem('vion-appt',JSON.stringify(APPT))}catch(e){}};
+
+/* ---------- registration ---------- */
+const IC2={plan:'<path d="M4 19V5M4 19h16"/><path d="M8 15l3-4 3 2 4-6"/>',d360:'<circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6"/>'};
+Object.assign(IC,IC2);
+try{
+ if(!PAGES.some(z=>z[0]==='plan')){const i=PAGES.findIndex(z=>z[0]==='bkt');PAGES.splice(i>=0?i+1:PAGES.length,0,['plan','Plan Tracker','प्लान ट्रैकर','plan']);Object.assign(PGOF,{'s-plan':'plan'})}
+ if(!PAGES.some(z=>z[0]==='d360')){const i=PAGES.findIndex(z=>z[0]==='custs');PAGES.splice(i>=0?i+1:PAGES.length,0,['d360','Distributor 360','डिस्ट्रीब्यूटर 360','d360']);Object.assign(PGOF,{'s-d360':'d360'})}
+}catch(e){console.error('p18 reg',e)}
+
+/* ---------- sidebar groups ---------- */
+const GROUPS=[['perf','Performance','परफॉर्मेंस',['score','psales','bkt','plan','team']],['prod','Products','प्रोडक्ट',['prods','cat']],['mkt','Market','मार्केट',['dists','custs','d360','jcp']],['gov','Government','सरकारी',['subs','mnre']],['act','Actions','कार्रवाई',['risk','act','docs']]];
+(function reorder(){const rank=id=>{for(let i=0;i<GROUPS.length;i++){const j=GROUPS[i][3].indexOf(id);if(j>=0)return i*100+j}return 900};PAGES.sort((a,b)=>rank(a[0])-rank(b[0]))})();
+function groupTabs(){
+ const t=document.getElementById('tabs');if(!t)return;
+ t.querySelectorAll('.tg').forEach(e=>e.remove());
+ GROUPS.forEach(gp=>{const b=gp[3].map(id=>t.querySelector('[data-pg="'+id+'"]')).find(Boolean);if(!b)return;const h=document.createElement('div');h.className='tg';h.textContent=tt(gp[1],gp[2]);t.insertBefore(h,b)});
+}
+{const st=document.createElement('style');st.id='p18css';st.textContent=`
+#tabs .tg{font:700 10px/1 var(--mono,ui-monospace,monospace);letter-spacing:.14em;text-transform:uppercase;color:var(--mut);padding:12px 12px 5px;opacity:.85}
+#tabs .tg:first-child{padding-top:4px}
+.p8t{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:4px 18px 12px}
+.p8t select,.p8t input{border:1px solid var(--line2);background:var(--card);color:var(--txt);border-radius:10px;padding:8px 12px;font:600 13px inherit;max-width:100%}
+.p8b{display:flex;align-items:center;gap:8px;height:10px;margin:0}
+.p8bar{display:grid;grid-template-columns:44px 1fr 64px;gap:10px;align-items:center;padding:3px 18px;font-size:12px;color:var(--txt2)}
+.p8bar i{display:block;height:9px;border-radius:5px;background:var(--c,#0FA3BF);min-width:2px}
+.p8bar span.t{background:var(--line2);border-radius:5px;height:9px;overflow:hidden}
+.p8bar b{text-align:right;color:var(--txt)}
+.p8h{padding:14px 18px 4px;font-weight:700;font-size:14px}
+.p8h small{display:block;font-weight:400;font-size:12px;color:var(--mut)}
+.p8s{border:1px solid var(--line2);background:var(--card);color:var(--txt);border-radius:8px;padding:5px 8px;font:600 12px inherit}
+.p8chip{display:inline-block;padding:2px 9px;border-radius:999px;font:700 11px inherit;color:#fff;background:var(--c,#64748B)}
+.p8flow{display:flex;gap:0;padding:6px 18px 14px;flex-wrap:wrap}
+.p8flow>div{flex:1 1 140px;padding:10px 12px;border-left:3px solid var(--c);background:var(--card);margin:3px;border-radius:6px}
+.p8flow .k{font-size:11px;color:var(--mut)}.p8flow .v{font:700 20px inherit;color:var(--txt)}.p8flow .s{font-size:11px;color:var(--txt2)}
+`;document.head.appendChild(st)}
+
+/* ---------- helpers ---------- */
+const pm=d=>d.m||[];
+const NT=()=>D.dist.filter(inScope);
+const nsvNow=d=>+(pm(d)[cur]||0),nsvPrev=d=>+(pm(d)[cur-1]||0);
+const tgtEx=d=>(d.tgt||0)/g;
+const head=(pg,t,s,nn)=>`<div class="rvh">${nn===false?'':`<span class="n">${String(PAGES.findIndex(z=>z[0]===pg)+1).padStart(2,'0')}</span>`}<h3>${t}${s?`<small>${s}</small>`:''}</h3></div><div class="rvu"></div>`;
+const shell=(pg,t,s,b,nn)=>`<section class="sec rvs p18" id="s-${pg}" data-pg="${pg}">${head(pg,t,s,nn)}${b}</section>`;
+const tile=(k,v,s,c)=>`<div style="--c:${c||C.cyan}"><div class="k">${k}</div><div class="v">${v}</div>${s?`<div class="s">${s}</div>`:''}</div>`;
+const mon=i=>D.months[i]||'';
+const f=()=>(typeof elapsed==='number'&&typeof dim==='number'&&elapsed>0&&dim>0)?Math.min(1,elapsed/dim):1;
+
+/* ---------- plan vs achievement strip ---------- */
+function stripBody(){
+ const L=NT(),plan=sum(L.map(tgtEx)),bill=sum(L.map(nsvNow)),prev=sum(L.map(nsvPrev)),gap=Math.max(0,plan-bill),left=Math.max(1,dim-elapsed);
+ const p=plan>0?bill/plan:0,pr=plan>0?bill/(plan*f()):0;
+ return `<div class="rvk">${tile(mon(cur-1)+tt(' actual',' वास्तविक'),'₹'+lakh(prev)+' L',tt('NSV ex-GST','NSV (GST के बिना)'),C.blue)}${tile(mon(cur)+tt(' plan',' प्लान'),'₹'+lakh(plan)+' L',tt('NSV ex-GST · deck commitment','NSV (GST के बिना) · डेक प्रतिबद्धता'),C.purple)}${tile(mon(cur)+tt(' billed so far',' अब तक बिल'),'₹'+lakh(bill)+' L',`${Math.round(p*100)}% ${tt('of plan','प्लान का')} · ${tt('data to','डेटा तक')} ${fmtD(D.asof,{day:'2-digit',month:'short'})}`,pcol(pr))}${tile(tt('Gap to plan','प्लान से अंतर'),'₹'+lakh(gap)+' L',tt('growth needed vs ','चाहिए वृद्धि बनाम ')+mon(cur-1)+': '+(prev>0?'+'+Math.round((plan/prev-1)*100)+'%':'–'),C.orange)}${tile(tt('Required per day','प्रति दिन चाहिए'),'₹'+lakh(gap/left)+' L',left+tt(' days left in month',' दिन बाकी'),C.red)}</div>`;
+}
+
+/* ---------- Plan Tracker ---------- */
+function planBody(){
+ const L=NT().filter(d=>d.tgt>0||nsvNow(d)>0||isNew(d)),asms=scope==='All'?ASMS:[scope];
+ const row=a=>{const x=L.filter(d=>d.asm===a),ex=x.filter(d=>!isNew(d)),nw=x.filter(isNew);
+  return {a,ep:sum(ex.map(tgtEx)),eb:sum(ex.map(nsvNow)),np:sum(nw.map(tgtEx)),nb:sum(nw.map(nsvNow)),nn:nw.length,en:ex.filter(d=>d.tgt>0).length}};
+ const rs=asms.map(row),T=k=>sum(rs.map(r=>r[k]));
+ const tr=r=>`<tr><td class="l"><span class="rvd"><i style="background:${ASMC[r.a]||'#0FA3BF'}"></i><b>${esc(r.a)}</b></span></td><td>${r.en}</td><td>${lakh(r.ep)}</td><td>${lakh(r.eb)}</td><td>${r.ep>0?pill(r.eb/r.ep):'–'}</td><td>${r.nn}</td><td>${lakh(r.np)}</td><td>${lakh(r.nb)}</td><td><b>${lakh(r.ep+r.np)}</b></td><td>${r.np>0?Math.round(r.np/(r.ep+r.np)*100)+'%':'–'}</td></tr>`;
+ const split=`<div class="p8h">${tt('Existing channel vs new towns','मौजूदा चैनल बनाम नए शहर')}<small>${tt('Plan and billing in NSV ex-GST ₹ L, '+mon(cur),'प्लान और बिलिंग NSV (GST के बिना) ₹ L, '+mon(cur))}</small></div>
+ <div class="rvt"><table><tr><th class="l">ASM</th><th>${tt('Existing DT','मौजूदा DT')}</th><th>${tt('Plan ₹ L','प्लान ₹ L')}</th><th>${tt('Billed ₹ L','बिल ₹ L')}</th><th>%</th><th>${tt('New towns','नए शहर')}</th><th>${tt('Plan ₹ L','प्लान ₹ L')}</th><th>${tt('Billed ₹ L','बिल ₹ L')}</th><th>${tt('Total plan','कुल प्लान')}</th><th>${tt('New-town share','नए शहर हिस्सा')}</th></tr>${rs.map(tr).join('')}${rs.length>1?`<tr class="tot"><td class="l">${tt('Total','कुल')}</td><td>${T('en')}</td><td>${lakh(T('ep'))}</td><td>${lakh(T('eb'))}</td><td>${T('ep')>0?pill(T('eb')/T('ep')):'–'}</td><td>${T('nn')}</td><td>${lakh(T('np'))}</td><td>${lakh(T('nb'))}</td><td>${lakh(T('ep')+T('np'))}</td><td>${Math.round(T('np')/(T('ep')+T('np')||1)*100)}%</td></tr>`:''}</table></div>`;
+ /* dormant revival: existing DT with plan, nil in previous month */
+ const dorm=L.filter(d=>d.code).filter(d=>!isNew(d)&&d.tgt>0&&nsvPrev(d)<=0).sort((a,b)=>b.tgt-a.tgt);
+ const rev=dorm.filter(d=>nsvNow(d)>0);
+ const dr=dorm.map(d=>{const ok=nsvNow(d)>0;return `<tr><td class="l"><b>${esc(d.name)}</b><small>${esc(d.city||d.dt||'')}</small></td><td class="l">${esc(short(d.asm))}</td><td>${lakh(tgtEx(d))}</td><td>${d.last?fmtD(d.last,{day:'2-digit',month:'short'})+' · '+days(d.last)+tt('d ago','दिन पहले'):tt('never','कभी नहीं')}</td><td>${ok?lakh(nsvNow(d)):'–'}</td><td><span class="p8chip" style="--c:${ok?C.green:C.red}">${ok?tt('Revived','शुरू'):tt('Visit now','अभी विज़िट')}</span></td></tr>`}).join('');
+ const dormH=`<div class="p8h">${tt('Dormant revival','निष्क्रिय अकाउंट रिवाइवल')}<small>${tt('Existing distributors with a '+mon(cur)+' plan but no billing in '+mon(cur-1)+'. Plan: restart billing by 16–21 Nov.','जिन मौजूदा डिस्ट्रीब्यूटर का '+mon(cur)+' प्लान है पर '+mon(cur-1)+' में बिल नहीं। लक्ष्य: 16–21 नवंबर तक बिलिंग शुरू।')}</small></div>
+ <div class="rvk">${tile(tt('Dormant accounts','निष्क्रिय अकाउंट'),dorm.length,tt('nil in ','शून्य: ')+mon(cur-1),C.red)}${tile(tt('Plan riding on them','इन पर प्लान'),'₹'+lakh(sum(dorm.map(tgtEx)))+' L',tt('NSV ex-GST','NSV (GST के बिना)'),C.orange)}${tile(tt('Revived so far','अब तक शुरू'),rev.length+' / '+dorm.length,'₹'+lakh(sum(rev.map(nsvNow)))+' L '+tt('billed','बिल'),C.green)}</div>
+ <div class="rvt"><table><tr><th class="l">${tt('Distributor','डिस्ट्रीब्यूटर')}</th><th class="l">ASM</th><th>${tt('Plan ₹ L','प्लान ₹ L')}</th><th>${tt('Last order','अंतिम ऑर्डर')}</th><th>${tt('Billed ₹ L','बिल ₹ L')}</th><th>${tt('Status','स्थिति')}</th></tr>${dr||`<tr><td class="l" colspan="6">${tt('No dormant accounts.','कोई निष्क्रिय अकाउंट नहीं।')}</td></tr>`}</table></div>`;
+ /* appointments */
+ const STS=[['pend',tt('Pending','लंबित'),'#64748B'],['docs',tt('Documents in process','दस्तावेज़ प्रक्रिया में'),'#F59E0B'],['code',tt('SAP code received','SAP कोड मिला'),'#2563EB'],['bill',tt('Billing started','बिलिंग शुरू'),'#16A34A']];
+ const DEF={'Bhuj (Kutch)':'docs'};
+ const towns=D.dist.filter(d=>isNew(d)&&(scope==='All'||d.asm===scope)).sort((a,b)=>(a.asm>b.asm?1:-1)||b.tgt-a.tgt);
+ const stOf=d=>nsvNow(d)>0?'bill':(APPT[d.name]||DEF[d.name]||'pend');
+ const tr2=towns.map(d=>{const s=stOf(d),lock=nsvNow(d)>0;return `<tr><td class="l"><b>${esc(d.name)}</b></td><td class="l">${esc(short(d.asm))}</td><td>${lakh(tgtEx(d))}</td><td>${lakh(nsvNow(d))}</td><td class="l"><select class="p8s" data-appt="${esc(d.name)}" ${lock?'disabled':''}>${STS.map(x=>`<option value="${x[0]}" ${x[0]===s?'selected':''}>${x[1]}</option>`).join('')}</select></td></tr>`}).join('');
+ const cnt=k=>towns.filter(d=>stOf(d)===k).length;
+ const apH=`<div class="p8h">${tt('New distributor appointments','नए डिस्ट्रीब्यूटर नियुक्ति')}<small>${tt('Target: all appointments and SAP codes by 25 Nov so billing starts early. Change a status with the dropdown (saved in this browser).','लक्ष्य: सभी नियुक्ति और SAP कोड 25 नवंबर तक ताकि बिलिंग जल्दी शुरू हो। ड्रॉपडाउन से स्थिति बदलें (इस ब्राउज़र में सेव)।')}</small></div>
+ <div class="rvk">${STS.map(s=>tile(s[1],cnt(s[0]),'',s[2])).join('')}</div>
+ <div class="rvt"><table><tr><th class="l">${tt('Town','शहर')}</th><th class="l">ASM</th><th>${tt('Plan ₹ L','प्लान ₹ L')}</th><th>${tt('Billed ₹ L','बिल ₹ L')}</th><th class="l">${tt('Status','स्थिति')}</th></tr>${tr2}</table></div>`;
+ const ANN=[['AM-Rajkot','Vishal Chaniyara',10,12,3],['AM-Indore','Adarsh Mishra',20,8,3],['AM-Jabalpur','Harsh Singh',10,8,4]].filter(r=>scope==='All'||r[1]===scope);
+ const at=ANN.map(r=>`<tr><td class="l"><b>${r[0]}</b></td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[3]+r[4]}</td><td>${Math.round((r[3]+r[4])/r[2]*100)}%</td></tr>`).join('');
+ const ta=k=>sum(ANN.map(r=>r[k])),annH=`<div class="p8h">${tt('Annual appointment plan','वार्षिक नियुक्ति प्लान')}<small>${tt('As in the business review of 6 Nov 2026 (YTD Apr–Oct).','6 नवंबर 2026 की बिज़नेस रिव्यू के अनुसार (YTD अप्रैल–अक्टूबर)।')}</small></div>
+ <div class="rvt"><table><tr><th class="l">ASM</th><th>${tt('Annual plan','वार्षिक प्लान')}</th><th>YTD</th><th>${mon(cur)+tt(' plan',' प्लान')}</th><th>${tt('After ','बाद ')+mon(cur)}</th><th>%</th></tr>${at}${ANN.length>1?`<tr class="tot"><td class="l">${tt('Total','कुल')}</td><td>${ta(2)}</td><td>${ta(3)}</td><td>${ta(4)}</td><td>${ta(3)+ta(4)}</td><td>${Math.round((ta(3)+ta(4))/ta(2)*100)}%</td></tr>`:''}</table></div>`;
+ return stripBody()+split+dormH+apH+annH+`<div class="rvn">${tt('Plan = '+mon(cur)+' commitment of ₹107.25 L NSV ex-GST (business review, 6 Nov 2026). Billed = NSV ex-GST from invoices, data to '+fmtD(D.asof,{day:'2-digit',month:'short'})+'. New towns are the 10 planned appointments.','प्लान = '+mon(cur)+' की ₹107.25 L NSV (GST के बिना) प्रतिबद्धता (बिज़नेस रिव्यू, 6 नवंबर 2026)। बिल = इनवॉइस से NSV (GST के बिना)। नए शहर = 10 नियोजित नियुक्तियाँ।')}</div>`;
+}
+
+/* ---------- Distributor 360 ---------- */
+function d360Body(){
+ const L=NT().filter(d=>d.code).sort((a,b)=>(b.tgt-a.tgt)||(nsvNow(b)-nsvNow(a)));
+ if(!L.length)return `<div class="rvn">${tt('No distributors in this view.','इस व्यू में कोई डिस्ट्रीब्यूटर नहीं।')}</div>`;
+ let d=L.find(x=>x.code===D3)||L[0];D3=d.code;
+ const sel=`<div class="p8t"><select id="d360Sel" aria-label="Distributor">${L.map(x=>`<option value="${esc(x.code)}" ${x.code===d.code?'selected':''}>${esc(x.name)} · ${esc(short(x.asm))}</option>`).join('')}</select></div>`;
+ const m=pm(d),mx=Math.max(1,...m.map(v=>+v||0)),plan=tgtEx(d),bill=nsvNow(d),p=plan>0?bill/plan:null,left=Math.max(1,dim-elapsed);
+ const last3=m.slice(Math.max(0,cur-3),cur).map(v=>+v||0),avg3=last3.length?sum(last3)/last3.length:0;
+ const tiles=`<div class="rvk">${tile(mon(cur)+tt(' plan',' प्लान'),plan>0?'₹'+lakh(plan)+' L':'–',plan>0?tt('NSV ex-GST · ₹'+lakh(d.tgt)+' L incl. GST','NSV (GST के बिना) · ₹'+lakh(d.tgt)+' L GST सहित'):tt('no plan','प्लान नहीं'),C.purple)}${tile(mon(cur)+tt(' billed',' बिल'),'₹'+lakh(bill)+' L',p===null?'':Math.round(p*100)+'% '+tt('of plan','प्लान का'),p===null?C.blue:pcol(p/f()))}${tile(tt('Still to bill','बाकी'),'₹'+lakh(Math.max(0,plan-bill))+' L',plan>0?'₹'+lakh(Math.max(0,plan-bill)/left)+' L '+tt('per day','प्रति दिन'):'',C.orange)}${tile(mon(cur-1),'₹'+lakh(nsvPrev(d))+' L',tt('last month NSV','पिछले माह NSV'),C.blue)}${tile(tt('3-month average','3 माह औसत'),'₹'+lakh(avg3)+' L',tt('per month NSV','प्रति माह NSV'),C.cyan)}${tile(tt('Last order','अंतिम ऑर्डर'),d.last?fmtD(d.last,{day:'2-digit',month:'short'}):'–',d.last?days(d.last)+tt(' days ago',' दिन पहले'):'',days(d.last||'')>=30?C.red:C.green)}</div>`;
+ const info=`<div class="rvn"><b>${esc(d.name)}</b> · ${esc(d.city||d.dt||'')}${d.state?', '+esc(d.state):''} · ASM ${esc(d.asm)} · SAP ${esc(d.code)}${d.slab?' · '+tt('Slab','स्लैब')+': '+esc(d.slab):''}${d.units?' · '+f0(d.units)+tt(' units billed',' यूनिट बिल'):''}</div>`;
+ const trend=`<div class="p8h">${tt('Monthly billing (NSV ex-GST ₹ L)','मासिक बिलिंग (NSV GST के बिना ₹ L)')}</div>`+m.map((v,i)=>`<div class="p8bar"><span>${esc(mon(i))}</span><span class="t"><i style="width:${(+v||0)/mx*100}%;--c:${i===cur?C.cyan:'#94A3B8'}"></i></span><b>${lakh(+v||0)}</b></div>`).join('');
+ const ln=(D.ln||[]).filter(l=>String(l.c)===String(d.code));
+ const pmx=new Map();ln.forEach(l=>{const o=pmx.get(l.m)||{q:0,n:0};o.q+=+l.q||0;o.n+=+l.n||0;pmx.set(l.m,o)});
+ const prod=[...pmx.entries()].sort((a,b)=>b[1].n-a[1].n).slice(0,8),pt=sum([...pmx.values()].map(o=>o.n))||1;
+ const prodH=`<div class="p8h">${tt('Product mix','प्रोडक्ट मिक्स')}</div><div class="rvt"><table><tr><th class="l">${tt('Product','प्रोडक्ट')}</th><th>${tt('Units','यूनिट')}</th><th>${tt('NSV ₹ L','NSV ₹ L')}</th><th>${tt('Share','हिस्सा')}</th></tr>${prod.map(([n,o])=>`<tr><td class="l">${esc(n)}</td><td>${f0(o.q)}</td><td>${lakh(o.n/1e5)}</td><td>${Math.round(o.n/pt*100)}%</td></tr>`).join('')||`<tr><td class="l" colspan="4">${tt('No invoices yet.','अभी कोई इनवॉइस नहीं।')}</td></tr>`}</table></div>`;
+ const inv=new Map();ln.forEach(l=>{const o=inv.get(l.i)||{d:l.d,g:0,q:0};o.g+=+l.g||0;o.q+=+l.q||0;inv.set(l.i,o)});
+ const rec=[...inv.entries()].sort((a,b)=>String(b[1].d).localeCompare(String(a[1].d))).slice(0,6);
+ const invH=`<div class="p8h">${tt('Recent invoices','हाल के इनवॉइस')}</div><div class="rvt"><table><tr><th class="l">${tt('Invoice','इनवॉइस')}</th><th>${tt('Date','तारीख')}</th><th>${tt('Units','यूनिट')}</th><th>${tt('Bill value incl. GST ₹ L','बिल मूल्य (GST सहित) ₹ L')}</th></tr>${rec.map(([i,o])=>`<tr><td class="l">${esc(i)}</td><td>${fmtD(o.d,{day:'2-digit',month:'short'})}</td><td>${f0(o.q)}</td><td>${lakh(o.g/1e5)}</td></tr>`).join('')||`<tr><td class="l" colspan="4">–</td></tr>`}</table></div>`;
+ return sel+tiles+info+trend+prodH+invH;
+}
+
+/* ---------- insert ---------- */
+function put(pg,html){const main=document.getElementById('main');if(!main)return;const t=document.createElement('div');t.innerHTML=html;const n=t.firstElementChild;n.classList.add('pgx');const f=[...main.children].find(e=>e.dataset&&e.dataset.pg===pg&&!e.classList.contains('p18'));f?main.insertBefore(n,f):main.appendChild(n)}
+function build(){
+ try{
+  const main=document.getElementById('main');if(!main||!D||!D.dist||!D.dist.length)return;
+  main.querySelectorAll('.p18').forEach(e=>e.remove());
+  put('plan',shell('plan',mon(cur)+' '+tt('Plan Tracker',' प्लान ट्रैकर'),tt('Plan vs achievement, existing vs new towns, dormant revival, appointments','प्लान बनाम उपलब्धि, मौजूदा बनाम नए शहर, निष्क्रिय रिवाइवल, नियुक्ति'),planBody()));
+  put('d360',shell('d360',tt('Distributor 360','डिस्ट्रीब्यूटर 360'),tt('One page per distributor: plan, billing, trend, products, invoices','हर डिस्ट्रीब्यूटर का एक पेज: प्लान, बिलिंग, ट्रेंड, प्रोडक्ट, इनवॉइस'),d360Body()));
+  put('score',shell('score',mon(cur)+tt(' plan vs achievement',' प्लान बनाम उपलब्धि'),tt('Where the month stands against the ₹107.25 L plan','₹107.25 L प्लान के मुकाबले माह की स्थिति'),stripBody(),false).replace('id="s-score"','id="s-p18strip"'));
+  groupTabs();if(typeof applyPage==='function')applyPage();
+ }catch(e){console.error('p18',e)}
+}
+document.addEventListener('change',e=>{const t=e.target;if(!t)return;
+ if(t.id==='d360Sel'){D3=t.value;try{localStorage.setItem('vion-d360',D3)}catch(_){}build()}
+ else if(t.dataset&&t.dataset.appt!==undefined){APPT[t.dataset.appt]=t.value;svA();build()}});
+const _r=render;render=function(){_r.apply(this,arguments);build()};
+if(typeof renderNav==='function'){const _n=renderNav;renderNav=function(){_n.apply(this,arguments);groupTabs()}}
+})();
+
 /* ===== ULTRON AI COMMAND CENTER (its own tab; not part of Mission, Revenue or any other page) =====
    What is real here: every number comes from the loaded workbook (D / X). Open questions go to Claude through the page's `sample`
    capability, when the viewer allows it. What is not real: there is no live web access in this viewer, so news, global scores and
