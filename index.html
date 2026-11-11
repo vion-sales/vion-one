@@ -1918,7 +1918,10 @@ sk2.textContent=S.map(css).join('\n');
 const fonts=new Set();
 const loadFont=f=>{if(!f||fonts.has(f))return;fonts.add(f);const l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+f.replace(/ /g,'+')+':wght@400;500;600;700&display=swap';document.head.appendChild(l)};
 
-let applied=sget(K.skin,''),previewing=null,open=false;
+let applied=sget(K.skin,null),previewing=null,open=false;
+/* default pair: Wall Street Navy (dark) + Boardroom Slate (light); first visit only, a manual choice or Reset is respected */
+if(applied===null){let lt=false;try{const v=localStorage.getItem('vion-theme');lt=!!v&&/light/.test(v)}catch(e){}applied=lt?'boardroom':'wallst'}
+const PAIR={wallst:'boardroom',boardroom:'wallst'};
 const curMode=()=>root.getAttribute('data-theme')||'dark';
 function setSkin(id,opt){
  opt=opt||{};const z=id?sk(id):null;
@@ -1937,7 +1940,7 @@ function modeFor(id){const z=sk(id);return z?z.mode:null}
 new MutationObserver(()=>{
  if(root.dataset.mode_guard==='1')return;
  const s=root.getAttribute('data-skin');if(!s)return;
- if(modeFor(s)!==curMode()){root.removeAttribute('data-skin');applied='';sset(K.skin,'');previewing=null;refreshPanel()}
+ if(modeFor(s)!==curMode()){const pr=PAIR[s];if(pr&&modeFor(pr)===curMode()){setSkin(pr);return}root.removeAttribute('data-skin');applied='';sset(K.skin,'');previewing=null;refreshPanel()}
 }).observe(root,{attributes:true,attributeFilter:['data-theme']});
 
 function saveRecent(id){let r=sget(K.rec,[]).filter(x=>x!==id);r.unshift(id);sset(K.rec,r.slice(0,4))}
