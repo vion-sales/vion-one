@@ -2195,6 +2195,7 @@ const st=document.createElement('style');st.id='gvCss';st.textContent=`
 .gvg input,.gvg select,.gvf input,.gvf select{background:var(--card2);color:var(--fg);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;font:500 13px var(--body);min-width:0;width:100%}
 .gvf{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}.gvf>*{flex:1 1 150px;min-width:0}
 .gvk{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:0 0 14px}
+.gvfl{display:block;margin:-6px 0 12px;font-size:12px;opacity:.75}
 .gvk .v{font-size:22px}
 .gvw{border:1px solid var(--line2);border-radius:12px;padding:10px 12px;margin:0 0 14px;font-size:12.5px;color:var(--txt2);background:color-mix(in srgb,var(--cyan) 7%,var(--card2));line-height:1.5}
 .gvw b{color:var(--hi)}
@@ -2307,9 +2308,11 @@ function mnreHTML(){
  if(MV.d!=='All'&&!ds.includes(MV.d))MV.d='All';
  const q=MV.q.trim().toLowerCase();
  const L=G.rows.filter(r=>(MV.st==='All'||r.s===MV.st)&&(MV.d==='All'||r.d===MV.d)&&(MV.b==='All'||r.b.includes(+MV.b))&&(!q||(r.n+' '+r.per+' '+r.em+' '+r.mob).toLowerCase().includes(q)));
- const kpis=`<div class="gvk"><div class="kpi" style="--c:#2563EB"><div class="k">${tt('Registered vendors','पंजीकृत वेंडर')}</div><div class="v">${f0(G.uniq)}</div><div class="s">${G.dists.length} ${tt('districts','ज़िले')}</div></div>
- <div class="kpi" style="--c:#16A34A"><div class="k">${tt('Vendor-district listings','वेंडर-ज़िला लिस्टिंग')}</div><div class="v">${f0(G.rows.length)}</div><div class="s">${tt('a vendor can serve several districts','एक वेंडर कई ज़िलों में हो सकता है')}</div></div>
- <div class="kpi" style="--c:#F59E0B"><div class="k">${tt('Vikram Solar partners','विक्रम सोलर पार्टनर')}</div><div class="v">${new Set(G.rows.filter(r=>r.b.includes(9)).map(r=>r.n.toUpperCase())).size} ${tt('vendors','वेंडर')}</div><div class="s">${new Set(G.rows.filter(r=>r.b.includes(9)).map(r=>r.s+'|'+r.d)).size} ${tt('districts','ज़िले')}</div></div></div>`;
+ const fl=MV.st!=='All'||MV.d!=='All'||MV.b!=='All'||!!q,un=a=>new Set(a.map(r=>r.n.toUpperCase())).size,vkR=L.filter(r=>r.b.includes(9));
+ const nV=fl?un(L):G.uniq,nD=fl?new Set(L.map(r=>r.s+'|'+r.d)).size:G.dists.length,hint=fl?`<small class="gvfl">${tt('Filtered','फ़िल्टर')}: ${[MV.st!=='All'?MV.st:'',MV.d!=='All'?MV.d:'',MV.b!=='All'?G.brands[+MV.b]:'',q?'“'+esc(MV.q.trim())+'”':''].filter(Boolean).map(x=>x).join(' · ')}</small>`:'';
+ const kpis=`<div class="gvk"><div class="kpi" style="--c:#2563EB"><div class="k">${tt('Registered vendors','पंजीकृत वेंडर')}</div><div class="v">${f0(nV)}</div><div class="s">${nD} ${tt('districts','ज़िले')}</div></div>
+ <div class="kpi" style="--c:#16A34A"><div class="k">${tt('Vendor-district listings','वेंडर-ज़िला लिस्टिंग')}</div><div class="v">${f0(L.length)}</div><div class="s">${tt('a vendor can serve several districts','एक वेंडर कई ज़िलों में हो सकता है')}</div></div>
+ <div class="kpi" style="--c:#F59E0B"><div class="k">${tt('Vikram Solar partners','विक्रम सोलर पार्टनर')}</div><div class="v">${un(vkR)} ${tt('vendors','वेंडर')}</div><div class="s">${new Set(vkR.map(r=>r.s+'|'+r.d)).size} ${tt('districts','ज़िले')}</div></div></div>${hint}`;
  const chips=`<div class="lnb"><button class="chip" data-mv="v" aria-pressed="${MV.view==='v'}">${tt('Vendors','वेंडर')}</button><button class="chip" data-mv="d" aria-pressed="${MV.view==='d'}">${tt('Districts','ज़िले')}</button></div>`;
  let body;
  if(MV.view==='d'){
