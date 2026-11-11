@@ -2770,7 +2770,7 @@ function gauges(){
   sec.insertAdjacentHTML('beforeend','<div class="rvg">'+cards+'</div>');
  }catch(e){console.error('glass gauges',e)}
 }
-try{const _r=render;render=function(){const r=_r.apply(this,arguments);gauges();return r}}catch(e){console.error('glass render',e)}
+try{const _r=render;render=function(){try{if(D&&D.months&&D.mkeys&&D.months.length===D.mkeys.length&&D.months.some(m=>m.indexOf("'")<0))D.months=D.months.map((m,i)=>m.split("'")[0]+"'"+String(D.mkeys[i]).slice(2,4))}catch(e){}const r=_r.apply(this,arguments);gauges();return r}}catch(e){console.error('glass render',e)}
 
 /* controls + sidebar toggle */
 function ensure(){
