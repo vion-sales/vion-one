@@ -2544,7 +2544,9 @@ body.fv #brand.brand,body.fv #brand,body.fv .tick{display:none!important}
 @media(max-width:700px){.rvh{padding:12px 14px 6px}.rvu{margin-left:14px}.rvk,.rvc,.rvt,.rvn{padding-left:14px;padding-right:14px}.rvk .v{font-size:18px}}
 `;document.head.appendChild(st);
 
+try{for(let q=PAGES.length-1;q>=0;q--)if(PAGES[q][0]==='qa')PAGES.splice(q,1)}catch(e){}
 try{if(!PAGES.some(z=>z[0]==='jcp')){const i=PAGES.findIndex(z=>z[0]==='prods');PAGES.splice(i>=0?i+1:PAGES.length,0,['jcp','JCP','जेसीपी','jcp']);Object.assign(PGOF,{'s-jcp':'jcp'});IC.jcp='<path d="M12 21s-6-5.2-6-10a6 6 0 0 1 12 0c0 4.8-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/>'}}catch(e){console.error('jcp reg',e)}
+try{if(!PAGES.some(z=>z[0]==='bkt')){const i=PAGES.findIndex(z=>z[0]==='psales');PAGES.splice(i>=0?i+1:PAGES.length,0,['bkt','Distributor Buckets','डिस्ट्रीब्यूटर बकेट','bkt']);Object.assign(PGOF,{'s-bkt':'bkt'});IC.bkt='<path d="M5 20V10M12 20V4M19 20v-7"/>'}}catch(e){console.error('bkt reg',e)}
 const NUM=new Proxy({},{get:(_,k)=>{const i=PAGES.findIndex(z=>z[0]===k);return i<0?'':String(i+1).padStart(2,'0')}});
 const lakh=v=>f2(v);
 const PR=()=>(typeof elapsed==='number'&&typeof dim==='number'&&elapsed>0&&dim>0)?Math.min(1,elapsed/dim):1;
@@ -2623,6 +2625,30 @@ function jcpBody(S){
  return k+note+`<div class="rvt"><table>${th}${rows}${trow}</table></div><div class="gvh" style="padding:12px 18px 0">${tt('Distributor-wise visits','डिस्ट्रीब्यूटर-वार विज़िट')}</div><div class="rvt rvscr"><table>${dth}${drows}</table></div><div class="rvn">${tt('Visits come from the JCP Excel (Joint Call Plan visit dump). Bill value is shown beside each distributor for context.','विज़िट JCP Excel (जॉइंट कॉल प्लान विज़िट डंप) से आती हैं। संदर्भ के लिए हर डिस्ट्रीब्यूटर के साथ बिल मूल्य दिखाया गया है।')}</div>`;
 }
 
+function bktBody(S){
+ const L=(D.ln||[]).filter(x=>scope==='All'||x.a===scope),N=D.mkeys.length,net={},pos={},nm={};
+ L.forEach(x=>{const i=D.mkeys.indexOf(String(x.d).slice(0,7));if(i<0)return;const c=String(x.c);(net[c]=net[c]||new Array(N).fill(0))[i]+=x.n;(pos[c]=pos[c]||new Array(N).fill(0));if(x.n>0)pos[c][i]=1});
+ (D.dist||[]).forEach(d=>{nm[String(d.code)]=d});
+ const band=v=>v<5?0:v<=10?1:2,rows=[],U=[new Set(),new Set(),new Set()],all=new Set();
+ const last=Math.min(cur,N-1);let first=0;while(first<last&&!Object.keys(pos).some(c=>pos[c][first]))first++;
+ for(let i=first;i<=last;i++){const b=[0,0,0];Object.keys(pos).forEach(c=>{if(pos[c][i]){const k=band(net[c][i]/1e5);b[k]++;U[k].add(c);all.add(c)}});rows.push({i,b,t:b[0]+b[1]+b[2]})}
+ const cr=rows[rows.length-1]||{b:[0,0,0],t:0,i:last},pr=rows[rows.length-2];
+ const th=`<tr><th class="l">${tt('Month','महीना')}</th><th>${tt('< ₹5 L','< ₹5 L')}</th><th>${tt('₹5.01–10 L','₹5.01–10 L')}</th><th>${tt('> ₹10 L','> ₹10 L')}</th><th>${tt('All buckets (distinct)','सभी बकेट (अलग)')}</th></tr>`;
+ const tr=rows.map(r=>`<tr><td class="l"><b>${esc(D.months[r.i])}</b></td><td>${r.b[0]}</td><td>${r.b[1]}</td><td>${r.b[2]}</td><td><b class="big">${r.t}</b></td></tr>`).join('')+`<tr class="tot"><td class="l">${tt('Selected period (distinct)','चुनी अवधि (अलग)')}</td><td>${U[0].size}</td><td>${U[1].size}</td><td>${U[2].size}</td><td>${all.size}</td></tr>`;
+ const dlt=pr?cr.t-pr.t:0,sub=pr?(dlt>=0?'+':'')+dlt+' '+tt('vs','बनाम')+' '+D.months[pr.i]:'';
+ const tiles=`<div class="rvk">${tile(tt('Distributors billed','बिलिंग करने वाले'),f0(cr.t),D.months[cr.i]+' · '+sub,C.cyan)}${tile(tt('Below ₹5 L','₹5 L से कम'),f0(cr.b[0]),D.months[cr.i],C.orange)}${tile(tt('₹5.01–10 L','₹5.01–10 L'),f0(cr.b[1]),D.months[cr.i],C.blue)}${tile(tt('Above ₹10 L','₹10 L से अधिक'),f0(cr.b[2]),D.months[cr.i],C.green)}</div>`;
+ // billing consistency
+ const cons=Object.keys(pos).map(c=>{const p=pos[c];const f=p.indexOf(1);if(f<0||f>last)return null;const since=last-f+1;let n=0;for(let i=f;i<=last;i++)n+=p[i];const d=nm[c]||{};return {c,name:d.name||c,asm:d.asm||'',f,n,since,pc:n/since,m:net[c]}}).filter(Boolean).sort((a,b)=>b.pc-a.pc||b.n-a.n);
+ const bk=[[0,.25],[.25,.5],[.5,.75],[.75,1.001]],bl=['0–25%','25.1–50%','50.01–75%','75.01–100%'];
+ const ar=S.asms.map(a=>{const z=cons.filter(r=>r.asm===a),c=bk.map(([lo,hi])=>z.filter(r=>r.pc>(lo||-1)&&r.pc<=Math.min(hi,1)||(lo===0&&r.pc===0)).length);return `<tr><td class="l"><span class="rvd"><i style="background:${ASMC[a]}"></i><b>${esc(a)}</b></span></td>${c.map(v=>`<td>${v}</td>`).join('')}<td><b class="big">${z.length}</b></td></tr>`}).join('');
+ const ath=`<tr><th class="l">ASM</th>${bl.map(x=>`<th>${x}</th>`).join('')}<th>${tt('Distributors','डिस्ट्रीब्यूटर')}</th></tr>`;
+ const mh=D.months.slice(first,last+1).map(m=>`<th>${esc(m)}</th>`).join('');
+ const cth=`<tr><th class="l">${tt('Distributor','डिस्ट्रीब्यूटर')}</th><th class="l">ASM</th><th>${tt('First bill','पहला बिल')}</th>${mh}<th>${tt('Months billed','बिल वाले महीने')}</th><th>${tt('Billed %','बिल %')}</th></tr>`;
+ const crow=cons.map(r=>`<tr><td class="l"><b>${esc(r.name)}</b><small>${esc(r.c)}</small></td><td class="l">${esc(r.asm.split(' ')[0])}</td><td>${esc(D.months[r.f])}</td>${r.m.slice(first,last+1).map((v,j)=>`<td>${first+j<r.f?'–':lakh(v/1e5)}</td>`).join('')}<td>${r.n} / ${r.since}</td><td><b class="big" style="color:${r.pc>=.75?'var(--green)':r.pc>=.5?'var(--orange)':'var(--red)'}">${(r.pc*100).toFixed(1)}%</b></td></tr>`).join('');
+ const never=(D.dist||[]).filter(d=>d.code&&(scope==='All'||d.asm===scope)&&!pos[String(d.code)]).length;
+ return tiles+`<div class="gvh" style="padding:12px 18px 0">${tt('Month-wise distributors by monthly billing bucket (NSV ex-GST)','मासिक बिलिंग बकेट के अनुसार डिस्ट्रीब्यूटर (NSV GST के बिना)')}</div><div class="rvt"><table>${th}${tr}</table></div>`+(S.asms.length?`<div class="gvh" style="padding:12px 18px 0">${tt('Billing consistency by ASM','ASM-वार बिलिंग निरंतरता')}</div><div class="rvt"><table>${ath}${ar}</table></div>`:'')+`<div class="gvh" style="padding:12px 18px 0">${tt('Distributor-wise monthly NSV ex-GST (₹ L) and billing consistency','डिस्ट्रीब्यूटर-वार मासिक NSV (GST के बिना, ₹ L) और बिलिंग निरंतरता')}</div><div class="rvt rvscr"><table>${cth}${crow}</table></div><div class="rvn">${tt(`A distributor counts in a month if it has at least one positive invoice line; its bucket is set by that month's net NSV (net of credits). Billed % = months billed ÷ months since the first bill. ${never} distributors have never billed.`,`किसी महीने में डिस्ट्रीब्यूटर तब गिना जाता है जब कम से कम एक पॉज़िटिव इनवॉइस लाइन हो; बकेट उस महीने के नेट NSV (क्रेडिट घटाकर) से तय होता है। बिल % = बिल वाले महीने ÷ पहले बिल के बाद के महीने। ${never} डिस्ट्रीब्यूटर ने कभी बिल नहीं किया।`)}</div>`;
+}
+
 /* ---- headline tiles for the other tabs ---- */
 function strip(pg,x,S){
  const tot={nsv:sum(S.rows.map(r=>r.nsv)),gross:sum(S.rows.map(r=>r.gross)),T:sum(S.rows.map(r=>r.T)),ach:sum(S.rows.map(r=>r.ach)),units:sum(S.rows.map(r=>r.units))};
@@ -2650,10 +2676,11 @@ function apply(x){
   const main=document.getElementById('main');if(!main||!D||!D.tx)return;
   main.querySelectorAll('.rvs').forEach(e=>e.remove());
   const S=stats(),mk=(pg,html)=>{if(!html)return;const t=document.createElement('div');t.innerHTML=html;const n=t.firstElementChild;const f=main.querySelector(':scope > section[data-pg="'+pg+'"],:scope > div[data-pg="'+pg+'"]');n.classList.add('pgx');if(f)main.insertBefore(n,f);else main.appendChild(n)};
-  const pages=['score','psales','team','prods','jcp','docs','dists','custs','risk','act','qa','mnre','subs'];
+  const pages=['score','psales','bkt','team','prods','jcp','docs','dists','custs','risk','act','qa','mnre','subs'];
   pages.forEach(pg=>{
    if(pg==='psales')mk(pg,shell(pg,'s-rvdist',tt('Distributor wise performance','डिस्ट्रीब्यूटर-वार परफ़ॉर्मेंस'),tt('Total bill value incl. GST · ','कुल बिल मूल्य (GST सहित) · ')+perLbl(),distBody(S)));
    else if(pg==='team')mk(pg,shell(pg,'s-rvemp',tt('Employee wise performance','कर्मचारी-वार परफ़ॉर्मेंस'),tt('NSV ex-GST · ','NSV (GST के बिना) · ')+perLbl(),empBody(S)));
+   else if(pg==='bkt')mk(pg,shell(pg,'s-bkt',tt('Distributor buckets','डिस्ट्रीब्यूटर बकेट'),tt('Month-wise count by billing band','बिलिंग बैंड के अनुसार मासिक गिनती'),bktBody(S)));
    else if(pg==='jcp')mk(pg,shell(pg,'s-jcp',tt('JCP','JCP'),jLbl(),jcpBody(S)));
    else mk(pg,strip(pg,x,S));
   });
