@@ -3128,6 +3128,39 @@ body.ultra *{scrollbar-width:thin;scrollbar-color:rgba(150,170,220,.35) transpar
 let raf=0;document.addEventListener('pointermove',e=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=0;const t=e.target&&e.target.closest?e.target.closest('.sec,.kpi,.rvk>div,.rvc>div,.rvg>div,.gauge,.tile'):null;if(!t)return;const r=t.getBoundingClientRect();t.style.setProperty('--mx',(e.clientX-r.left)+'px');t.style.setProperty('--my',(e.clientY-r.top)+'px')})},{passive:true});
 })();
 
+/* p20: ranking medals for ASMs (achievement vs target) */
+(function(){
+const M=['🥇','🥈','🥉'],NM=['Gold','Silver','Bronze'],CL=['#FFC83D','#C9D2DE','#D9873B'];
+const st=document.createElement('style');st.id='medalCss';st.textContent=`
+.medal{display:inline-block;margin-right:.3em;font-size:1.2em;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45));animation:mdl 3.6s ease-in-out infinite;transform-origin:50% 80%}
+.medal.m0{filter:drop-shadow(0 0 8px rgba(255,200,61,.75))}
+@keyframes mdl{0%,88%,100%{transform:none}92%{transform:rotate(-14deg) scale(1.15)}96%{transform:rotate(10deg) scale(1.1)}}
+.mdc0{box-shadow:0 0 0 1px rgba(255,200,61,.6),0 0 34px -6px rgba(255,200,61,.55)!important}
+.mdc1{box-shadow:0 0 0 1px rgba(201,210,222,.5),0 0 26px -8px rgba(201,210,222,.45)!important}
+.mdc2{box-shadow:0 0 0 1px rgba(217,135,59,.5),0 0 26px -8px rgba(217,135,59,.45)!important}
+.mdr{display:inline-block;margin-left:.5em;padding:1px 8px;border-radius:999px;font:700 10px var(--mono,monospace);letter-spacing:.08em;text-transform:uppercase;color:#1a1204;vertical-align:middle;background:var(--mc)}
+body .medal,body .mdr{display:inline-block!important;margin-top:0!important;width:auto!important;flex:none}
+body .rvg .t .medal{font-size:1.25em;letter-spacing:0}
+body .mdr{margin-left:.55em!important;padding:1px 8px!important;font:700 10px var(--mono,monospace)!important;letter-spacing:.1em!important;color:#1a1204!important}
+@media(prefers-reduced-motion:reduce){.medal{animation:none}}
+`;document.head.appendChild(st);
+function ranks(){
+ try{if(!D||!D.dist||typeof ASMS==='undefined'||ASMS.length<2)return null;
+  const r=ASMS.map(a=>{const L=D.dist.filter(d=>d.asm===a),T=L.reduce((s,d)=>s+(d.tgt||0),0),A=L.reduce((s,d)=>s+(d.ach||0),0);return {a,p:T>0?A/T:0,A}}).sort((x,y)=>y.p-x.p||y.A-x.A);
+  const o={};r.forEach((x,i)=>{if(i<3&&x.p>0)o[x.a]={i,p:x.p}});return o}catch(e){return null}}
+function medals(){
+ const main=document.getElementById('main');if(!main)return;
+ main.querySelectorAll('.medal,.mdr').forEach(e=>e.remove());
+ main.querySelectorAll('.mdc0,.mdc1,.mdc2').forEach(e=>e.classList.remove('mdc0','mdc1','mdc2'));
+ const R=ranks();if(!R)return;
+ const w=document.createTreeWalker(main,NodeFilter.SHOW_TEXT,{acceptNode:n=>{const t=n.nodeValue.trim();return R[t]&&!/^(OPTION|SELECT|SCRIPT|STYLE|TEXTAREA|BUTTON)$/.test(n.parentNode.tagName)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT}}),hit=[];
+ while(w.nextNode())hit.push(w.currentNode);
+ hit.forEach(n=>{const r=R[n.nodeValue.trim()],s=document.createElement('span');s.className='medal m'+r.i;s.textContent=M[r.i];s.title=NM[r.i]+' · rank '+(r.i+1)+' · '+Math.round(r.p*100)+'% of target';n.parentNode.insertBefore(s,n);
+  const card=n.parentNode.closest('.rvg>div,.rvc>div');if(card)card.classList.add('mdc'+r.i);
+  const big=n.parentNode.closest('.rvg .t,.rvc>div');if(big){const c=document.createElement('span');c.className='mdr';c.style.setProperty('--mc',CL[r.i]);c.textContent=NM[r.i];n.parentNode.appendChild(c)}})}
+const _r=render;render=function(){_r.apply(this,arguments);medals()};
+})();
+
 /* ===== ULTRON AI COMMAND CENTER (its own tab; not part of Mission, Revenue or any other page) =====
    What is real here: every number comes from the loaded workbook (D / X). Open questions go to Claude through the page's `sample`
    capability, when the viewer allows it. What is not real: there is no live web access in this viewer, so news, global scores and
