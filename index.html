@@ -3480,6 +3480,39 @@ document.addEventListener('click',e=>{
 const _r=render;render=function(){_r.apply(this,arguments);try{enhance()}catch(e){console.error('p22',e)}};
 })();
 
+/* p23: red animated Reset button (like Full view) - puts every filter and view back to the starting state */
+(function(){
+const st=document.createElement('style');st.id='rstCss';st.textContent=`
+#bReset{position:relative;color:#fff!important;font-weight:800!important;letter-spacing:.6px;border:1.5px solid transparent!important;background:linear-gradient(135deg,#8f0a1c,#ff2d4a 55%,#8f0a1c) padding-box,linear-gradient(120deg,#ffd60a,#ff2d4a,#ffd60a,#ff2d4a) border-box!important;background-size:100% 100%,300% 300%!important;box-shadow:0 0 12px rgba(255,45,74,.65),0 0 22px rgba(255,214,10,.3),inset 0 1px 0 rgba(255,255,255,.35);animation:rsGlow 1.6s ease-in-out infinite,fvEdge 3s linear infinite;text-shadow:0 0 8px rgba(255,214,10,.7);overflow:hidden;cursor:pointer}
+#bReset:before{content:'';position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,200,200,.75),transparent);transform:skewX(-20deg);animation:fvShine 2.4s ease-in-out infinite;pointer-events:none}
+#bReset:hover{transform:translateY(-1px) scale(1.04);filter:brightness(1.15)}
+#bReset.spin svg{animation:rsSpin .6s ease}
+#bReset svg{width:14px;height:14px;margin-right:6px;vertical-align:-2px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+@keyframes rsGlow{0%,100%{box-shadow:0 0 8px rgba(255,45,74,.55),0 0 14px rgba(255,214,10,.12),inset 0 1px 0 rgba(255,255,255,.3)}50%{box-shadow:0 0 18px rgba(255,45,74,.95),0 0 30px rgba(255,120,60,.7),inset 0 1px 0 rgba(255,255,255,.5)}}
+@keyframes rsSpin{to{transform:rotate(-360deg)}}
+@media(min-width:700px){body #hctl>#bReset{order:0}}
+@media(prefers-reduced-motion:reduce){#bReset,#bReset:before{animation:none!important}}`;
+document.head.appendChild(st);
+const ICON='<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>';
+function ensure(){const h=document.getElementById('hctl');if(!h||document.getElementById('bReset'))return;
+ const b=document.createElement('button');b.id='bReset';b.type='button';b.className='hb';b.title=tt('Reset everything to the starting view','सब कुछ शुरुआती व्यू पर रीसेट करें');b.innerHTML=ICON+'<span>'+tt('Reset','रीसेट')+'</span>';
+ const f=document.getElementById('bFull');if(f&&f.parentNode===h)f.after(b);else h.insertBefore(b,h.firstChild)}
+function doReset(b){
+ try{if(document.body.classList.contains('fv'))document.querySelector('#fvPill [data-fv="x"]')?.click()}catch(e){}
+ try{if(AUR()!=='asm')scope='All'}catch(e){scope='All'}
+ per='T';
+ try{const f=document.getElementById('pcSearch');if(f)f.value='';document.querySelector('[data-pcf="all"]')?.click();document.querySelector('[data-gclear]')?.click();
+  const g=document.getElementById('pcg');if(g)g.querySelectorAll('.pcd').forEach(d=>{d.hidden=false;d.classList.remove('open')})}catch(e){}
+ try{document.querySelectorAll('input[type=search],#gsearch').forEach(i=>{i.value='';i.dispatchEvent(new Event('input',{bubbles:true}))})}catch(e){}
+ try{if(typeof setPage==='function')setPage('score');else page='score'}catch(e){}
+ try{render()}catch(e){console.error('reset',e)}
+ window.scrollTo({top:0,behavior:'smooth'});
+ b.classList.add('spin');setTimeout(()=>b.classList.remove('spin'),700)}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#bReset');if(b)doReset(b)});
+document.addEventListener('keydown',e=>{if(e.altKey&&(e.key==='r'||e.key==='R')){const b=document.getElementById('bReset');if(b){e.preventDefault();doReset(b)}}});
+new MutationObserver(ensure).observe(document.body,{childList:true,subtree:true});setInterval(ensure,1500);ensure();
+})();
+
 /* ===== ULTRON AI COMMAND CENTER (its own tab; not part of Mission, Revenue or any other page) =====
    What is real here: every number comes from the loaded workbook (D / X). Open questions go to Claude through the page's `sample`
    capability, when the viewer allows it. What is not real: there is no live web access in this viewer, so news, global scores and
