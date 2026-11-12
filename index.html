@@ -3291,6 +3291,195 @@ function brand(){
 const _r=render;render=function(){_r.apply(this,arguments);try{tiles();inr(document.getElementById('main'));inr(document.getElementById('brand'));brand()}catch(e){console.error('p21',e)}};
 })();
 
+/* p22: Product Catalogue glass showroom */
+(function(){
+const CSS=`
+.cstage{--gb:rgba(255,255,255,.08);--gb2:rgba(255,255,255,.14);--gt:#F8FAFC;--gt2:#B6C6DD;--gl:rgba(255,255,255,.35);--gsh:0 20px 60px rgba(0,0,0,.35);
+ position:relative;margin:14px 0 6px;padding:22px;border-radius:30px;overflow:hidden;isolation:isolate;font-family:Inter,'IBM Plex Sans Devanagari',system-ui,sans-serif;
+ background:radial-gradient(900px 480px at 85% -10%,rgba(14,165,233,.40),transparent 60%),radial-gradient(700px 420px at 0% 100%,rgba(14,165,233,.20),transparent 62%),linear-gradient(160deg,#081C3A 0%,#0A2547 55%,#0B2F58 100%);color:var(--gt);border:1px solid rgba(255,255,255,.16)}
+.cstage.gl-light{--gb:rgba(255,255,255,.58);--gb2:rgba(255,255,255,.8);--gt:#0B1F3D;--gt2:#4B5F7E;--gl:rgba(255,255,255,.9);--gsh:0 20px 60px rgba(8,28,58,.15);
+ background:radial-gradient(900px 480px at 85% -10%,rgba(14,165,233,.28),transparent 60%),radial-gradient(700px 420px at 0% 100%,rgba(14,165,233,.14),transparent 62%),linear-gradient(160deg,#F8FAFC 0%,#E9F3FC 55%,#D7EAFA 100%);border-color:rgba(255,255,255,.9)}
+.cstage canvas.gpt{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.cstage>*:not(canvas){position:relative;z-index:1}
+.cstage .gtop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px}
+.cstage .gtop .gttl{font:700 12px Montserrat,Inter,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:#7DD3FC;margin-right:auto}
+.cstage.gl-light .gtop .gttl{color:#0369A1}
+.gglass{background:var(--gb);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);border:1px solid var(--gl);box-shadow:var(--gsh),inset 0 1px 0 rgba(255,255,255,.35)}
+.gmode{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 14px;font:600 12.5px Inter,sans-serif;color:var(--gt);cursor:pointer}
+.gmode svg{width:15px;height:15px}
+/* spotlight */
+.gspot{display:grid;grid-template-columns:minmax(180px,260px) 1fr;gap:22px;align-items:center;border-radius:28px;padding:20px 24px;margin-bottom:18px;position:relative;overflow:hidden}
+.gspot .gbadge{display:inline-flex;align-items:center;gap:7px;font:700 11px Montserrat,Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#38BDF8;margin-bottom:8px}
+.cstage.gl-light .gspot .gbadge{color:#0369A1}
+.gspot h3{margin:0 0 6px;font:700 28px/1.15 Montserrat,Inter,sans-serif;color:var(--gt)}
+.gspot .gsub{color:var(--gt2);font-size:16px;margin-bottom:12px}
+.gspot .gins{min-height:48px;font-size:16px;line-height:1.5;color:var(--gt);transition:opacity .4s}
+.gspot .gdots{display:flex;gap:6px;margin-top:10px}.gspot .gdots i{width:22px;height:4px;border-radius:4px;background:rgba(148,163,184,.4);cursor:pointer}.gspot .gdots i.on{background:#0EA5E9}
+.gspot .ghero{height:200px}
+/* filter row restyle */
+.cstage .pcf{margin:0 0 16px}
+.cstage .pcf button{background:var(--gb);backdrop-filter:blur(20px);border:1px solid var(--gl);color:var(--gt);border-radius:999px}
+.cstage .pcf button.on{background:linear-gradient(135deg,#0EA5E9,#0369A1);color:#fff;border-color:rgba(255,255,255,.5);box-shadow:0 0 22px rgba(14,165,233,.55)}
+.cstage .pcf input{background:var(--gb);backdrop-filter:blur(20px);border:1px solid var(--gl);color:var(--gt);border-radius:999px}
+/* grid + card */
+.cstage .pcg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,540px),1fr));gap:22px}
+.cstage .pcd{position:relative;display:grid;grid-template-columns:minmax(0,46fr) minmax(0,54fr);gap:0;padding:0;border-radius:28px;overflow:hidden;background:var(--gb);backdrop-filter:blur(26px) saturate(170%);-webkit-backdrop-filter:blur(26px) saturate(170%);border:1px solid var(--gl);box-shadow:var(--gsh),inset 0 1px 0 rgba(255,255,255,.4),inset 0 -1px 0 rgba(255,255,255,.1);color:var(--gt);transition:transform .35s,box-shadow .35s}
+.cstage .pcd[hidden]{display:none}
+.cstage .pcd:hover{transform:translateY(-4px);box-shadow:0 28px 70px rgba(0,0,0,.28),0 0 0 1px rgba(14,165,233,.35),inset 0 1px 0 rgba(255,255,255,.5)}
+.cstage .pcd::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(125deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.04) 32%,transparent 46%),linear-gradient(300deg,rgba(14,165,233,.12),transparent 40%);z-index:0}
+.cstage .pcd::after{content:"";position:absolute;top:-20%;bottom:-20%;left:-60%;width:38%;pointer-events:none;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);transform:skewX(-18deg);animation:gsweep 7s ease-in-out infinite;z-index:3}
+.cstage .pcd:nth-child(2n)::after{animation-delay:1.8s}.cstage .pcd:nth-child(3n)::after{animation-delay:3.4s}
+.cstage .pcd:hover::after{animation-duration:2.2s}
+@keyframes gsweep{0%,60%{left:-60%}100%{left:130%}}
+.cstage .pcd>*{position:relative;z-index:1}
+/* image frame */
+.gfr{margin:16px 0 16px 16px;border-radius:24px;min-height:330px;position:relative;perspective:900px;display:grid;place-items:center;overflow:hidden;
+ border:1.5px solid transparent;background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(14,165,233,.10)) padding-box,linear-gradient(135deg,#E2E8F0 0%,#0EA5E9 50%,#CBD5E1 100%) border-box;box-shadow:inset 0 0 40px rgba(14,165,233,.22),inset 0 1px 0 rgba(255,255,255,.6),0 10px 30px rgba(0,0,0,.18)}
+.cstage.gl-light .gfr{background:linear-gradient(160deg,rgba(255,255,255,.85),rgba(186,224,253,.45)) padding-box,linear-gradient(135deg,#CBD5E1 0%,#0EA5E9 50%,#E2E8F0 100%) border-box}
+.gfr .gled{position:absolute;left:50%;top:50%;width:80%;aspect-ratio:1;transform:translate(-50%,-52%);border-radius:50%;background:radial-gradient(circle,rgba(14,165,233,.85) 0%,rgba(14,165,233,.35) 38%,transparent 68%);filter:blur(18px);animation:gled 3.2s ease-in-out infinite;pointer-events:none}
+.cstage.gl-light .gfr .gled{opacity:.55}
+@keyframes gled{0%,100%{opacity:.75;transform:translate(-50%,-52%) scale(.94)}50%{opacity:1;transform:translate(-50%,-52%) scale(1.06)}}
+.gfr .gflow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.gfr .gflow path{fill:none;stroke-linecap:round;stroke-dasharray:6 18;animation:gflow 2.6s linear infinite}
+.gfr .gflow path:nth-child(2){animation-duration:3.4s;animation-direction:reverse}.gfr .gflow path:nth-child(3){animation-duration:4.2s}
+@keyframes gflow{to{stroke-dashoffset:-96}}
+.gfloat{position:relative;z-index:2;width:78%;transition:transform .45s cubic-bezier(.2,.8,.2,1);animation:gfl 5.5s ease-in-out infinite;transform-style:preserve-3d;margin-bottom:34px}
+@keyframes gfl{0%,100%{translate:0 0}50%{translate:0 -10px}}
+.gfloat .gimg{display:block;width:100%;height:auto;max-height:300px;object-fit:contain;-webkit-mask-image:radial-gradient(ellipse 62% 62% at 50% 50%,#000 58%,transparent 100%);mask-image:radial-gradient(ellipse 62% 62% at 50% 50%,#000 58%,transparent 100%);filter:contrast(1.06) saturate(1.12) drop-shadow(0 18px 18px rgba(0,0,0,.35));transform-origin:50% 50%}
+.cstage .pcd:hover .gfloat{transform:scale(1.05)}
+.cstage .pcd:hover .gimg{animation:gspin 1.6s cubic-bezier(.4,.1,.2,1) 1}
+@keyframes gspin{to{transform:rotateY(360deg)}}
+.gfr .gped{position:absolute;left:50%;bottom:20px;width:70%;height:26px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse at 50% 40%,rgba(255,255,255,.55),rgba(148,196,235,.25) 55%,transparent 72%);border:1px solid rgba(255,255,255,.5);box-shadow:0 14px 28px rgba(0,0,0,.35),0 0 30px rgba(14,165,233,.55),inset 0 2px 6px rgba(255,255,255,.6);z-index:1}
+.gfr .gped::after{content:"";position:absolute;left:12%;right:12%;top:70%;height:14px;border-radius:50%;background:rgba(0,0,0,.25);filter:blur(8px)}
+.gph{width:62%;aspect-ratio:3/4;position:relative;z-index:2;margin-bottom:30px;border-radius:18px;display:grid;place-items:center;text-align:center;background:linear-gradient(160deg,rgba(255,255,255,.22),rgba(14,165,233,.12));border:1px solid var(--gl);font:700 15px Montserrat,Inter,sans-serif;color:var(--gt);animation:gfl 5.5s ease-in-out infinite;backdrop-filter:blur(8px)}
+.gph small{display:block;font:500 11.5px Inter,sans-serif;color:var(--gt2);margin-top:6px;letter-spacing:.08em}
+/* badges */
+.gwar{position:absolute;right:12px;top:12px;z-index:5;max-width:72%;padding:7px 14px;border-radius:999px;font:800 12px Montserrat,Inter,sans-serif;color:#3a2800;background:linear-gradient(135deg,#FFD700 0%,#E2B84A 55%,#C89B3C 100%);box-shadow:0 10px 22px rgba(200,155,60,.45),0 2px 0 rgba(255,255,255,.55) inset;overflow:hidden;line-height:1.2;text-align:center;border:1px solid rgba(255,240,180,.8)}
+.gwar::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.85),transparent);transform:skewX(-20deg);animation:gshine 3.6s ease-in-out infinite}
+@keyframes gshine{0%,55%{left:-60%}100%{left:140%}}
+.gbdg{position:absolute;left:12px;top:12px;z-index:5;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.gbdg span{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font:700 11px Inter,sans-serif;color:#fff;background:rgba(8,28,58,.42);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.45);box-shadow:0 8px 18px rgba(0,0,0,.2)}
+.gbdg span svg{width:12px;height:12px}.gbdg .bs svg{color:#FFD700}.gbdg .tr svg{color:#7DD3FC}
+.cstage.gl-light .gbdg span{color:#0B1F3D;background:rgba(255,255,255,.7)}
+/* holographic */
+.gholo{position:absolute;right:10px;bottom:56px;z-index:4;width:132px;padding:9px 11px;border-radius:14px;font:600 10.5px Inter,sans-serif;color:#BAE6FD;background:linear-gradient(160deg,rgba(14,165,233,.22),rgba(14,165,233,.06));border:1px solid rgba(125,211,252,.55);box-shadow:0 0 24px rgba(14,165,233,.45),inset 0 0 18px rgba(14,165,233,.18);backdrop-filter:blur(8px);animation:gholo 4.2s ease-in-out infinite;opacity:.92;overflow:hidden}
+.cstage.gl-light .gholo{color:#075985;background:linear-gradient(160deg,rgba(14,165,233,.2),rgba(255,255,255,.4))}
+.gholo::before{content:"";position:absolute;left:0;right:0;height:30%;top:-30%;background:linear-gradient(180deg,transparent,rgba(125,211,252,.35),transparent);animation:gscan 2.8s linear infinite}
+@keyframes gscan{to{top:110%}}@keyframes gholo{0%,100%{translate:0 0}50%{translate:0 -6px}}
+.gholo div{display:flex;justify-content:space-between;gap:8px;padding:2px 0;white-space:nowrap}.gholo b{color:#fff;font-weight:700}.cstage.gl-light .gholo b{color:#0B1F3D}
+.gholo i{display:block;font:700 8.5px Montserrat,Inter,sans-serif;letter-spacing:.2em;text-transform:uppercase;opacity:.8;margin-bottom:3px;font-style:normal}
+/* body */
+.cstage .pcb{padding:20px 20px 18px 18px;gap:10px;display:flex;flex-direction:column;min-width:0}
+.cstage .pcd h4{margin:0;font:700 28px/1.12 Montserrat,Inter,sans-serif;color:var(--gt);letter-spacing:-.01em}
+.gchips{display:flex;flex-wrap:wrap;gap:7px}
+.gchip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font:600 13px Inter,sans-serif;color:var(--gt);background:var(--gb2);border:1px solid var(--gl);backdrop-filter:blur(14px);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.gchip svg{width:15px;height:15px;flex:none;color:#0EA5E9}.gchip.li{background:linear-gradient(135deg,rgba(14,165,233,.35),rgba(14,165,233,.12));border-color:rgba(125,211,252,.7)}
+.gcap{display:flex;flex-wrap:wrap;gap:7px}.gcap span{font:500 14px Inter,sans-serif;color:var(--gt);padding:5px 12px;border-radius:12px;background:var(--gb);border:1px solid var(--gl)}
+.gprice{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px;border-radius:18px;background:var(--gb2);border:1px solid var(--gl)}
+.gprice small{display:block;font:600 11px Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gt2)}.gprice b{font:700 20px Montserrat,Inter,sans-serif;color:var(--gt)}
+.cstage .pcu{font:500 14px Inter,sans-serif;color:#38BDF8}.cstage.gl-light .pcu{color:#0369A1}
+.gbtn{display:flex;gap:10px;margin-top:auto;flex-wrap:wrap}
+.gbtn button{flex:1;min-width:120px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:16px;font:700 14px Inter,sans-serif;cursor:pointer;color:var(--gt);background:var(--gb2);border:1px solid var(--gl);backdrop-filter:blur(16px);box-shadow:0 0 18px rgba(14,165,233,.35),inset 0 1px 0 rgba(255,255,255,.4);transition:box-shadow .25s,transform .25s,background .25s}
+.gbtn button:hover{transform:translateY(-2px);box-shadow:0 0 30px rgba(14,165,233,.8),inset 0 1px 0 rgba(255,255,255,.6)}
+.gbtn button.gv{background:linear-gradient(135deg,#0EA5E9,#0369A1);color:#fff;border-color:rgba(255,255,255,.5)}
+.gbtn button.on{background:linear-gradient(135deg,#FFD700,#C89B3C);color:#3a2800;box-shadow:0 0 22px rgba(255,215,0,.55)}
+.gbtn svg{width:16px;height:16px}
+.cstage .pcs{grid-column:1/-1;display:none;margin:0 16px 16px;padding:12px 16px;border-radius:20px;background:var(--gb);border:1px solid var(--gl)}
+.cstage .pcd.open .pcs{display:block}
+.cstage .pcs table{width:100%;border-collapse:collapse;font-size:14px}.cstage .pcs td{padding:6px 4px;border-bottom:1px solid rgba(148,163,184,.25);color:var(--gt)}.cstage .pcs td:first-child{color:var(--gt2)}.cstage .pcs td:last-child{text-align:right;font-weight:600}
+/* compare panel */
+.gcmp{margin:0 0 18px;border-radius:24px;padding:16px 18px;overflow:auto}.gcmp[hidden]{display:none}
+.gcmp table{width:100%;border-collapse:collapse;font-size:14px;min-width:420px}.gcmp th,.gcmp td{padding:8px 10px;border-bottom:1px solid rgba(148,163,184,.25);text-align:center;color:var(--gt)}.gcmp td:first-child,.gcmp th:first-child{text-align:left;color:var(--gt2)}.gcmp th{font:700 14px Montserrat,Inter,sans-serif}
+.gcmp .gch{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font:700 13px Montserrat,Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gt)}.gcmp .gch button{background:none;border:0;color:#38BDF8;cursor:pointer;font:600 13px Inter,sans-serif}
+@media(max-width:760px){.cstage{padding:14px;border-radius:22px}.cstage .pcg{grid-template-columns:1fr}.cstage .pcd{grid-template-columns:1fr}.gfr{margin:14px 14px 0;min-height:280px}.gspot{grid-template-columns:1fr;padding:16px}.gspot .ghero{height:170px}.gspot h3,.cstage .pcd h4{font-size:24px}.gholo{width:116px}}
+@media(prefers-reduced-motion:reduce){.cstage *,.cstage *::after,.cstage *::before{animation:none!important}}
+`;
+const st=document.createElement('style');st.textContent=CSS;document.head.appendChild(st);
+const I={
+ bolt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>',
+ bat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2M6 10v4M10 10v4"/></svg>',
+ atom:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="1.6"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></svg>',
+ gauge:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 18a8 8 0 1 1 16 0"/><path d="m12 18 4-6"/></svg>',
+ star:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/></svg>',
+ crown:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="m3 7 5 4 4-7 4 7 5-4-2 12H5z"/></svg>',
+ spark:'<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8zM19 16l.9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9z"/></svg>',
+ sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+ moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
+ cmp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M8 21H3v-5M21 3l-7 7M3 21l7-7"/></svg>',
+ eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'};
+const FLOW='<svg class="gflow" viewBox="0 0 200 260" preserveAspectRatio="none" aria-hidden="true"><path d="M14 210C20 120 70 40 100 34s80 80 86 176" stroke="#38BDF8" stroke-width="2" opacity=".85"/><path d="M26 220C34 150 64 70 100 62s66 88 74 158" stroke="#7DD3FC" stroke-width="1.5" opacity=".7"/><path d="M6 150c40-24 70 24 100 0s70-24 88 0" stroke="#FFD700" stroke-width="1.4" opacity=".6"/></svg>';
+let CMP=[],THEME=null,SPI=0,SPT=null,RAF=0;
+const nk=t=>String(t||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+function mode(){if(THEME)return THEME;try{const s=localStorage.getItem('catGlass');if(s)return s}catch(e){}return document.documentElement.getAttribute('data-theme')==='light'?'light':'dark'}
+function units(K){
+ const L=(D.ln||[]).filter(x=>scope==='All'||x.a===scope),b={};
+ L.forEach(x=>{const k=nk(x.m);b[k]=b[k]||{fy:0,mo:0};b[k].fy+=+x.q||0;if(String(x.d).slice(0,7)===D.mkeys[cur])b[k].mo+=+x.q||0});
+ return K.p.map(p=>{const u={fy:0,mo:0};p.al.forEach(a=>{if(b[a]){u.fy+=b[a].fy;u.mo+=b[a].mo}});return u})}
+const fm=v=>'₹'+Math.round(v).toLocaleString('en-IN');
+function chipFor(s){const t=s.trim();if(/kwh/i.test(t))return `<span class="gchip">${I.gauge}${esc(t)}</span>`;if(/\bah\b/i.test(t))return `<span class="gchip">${I.bat}${esc(t)}</span>`;if(/\bv\b/i.test(t)&&!/va/i.test(t))return `<span class="gchip">${I.bolt}${esc(t)}</span>`;return `<span class="gchip">${esc(t)}</span>`}
+function sp(p,k){const r=p.sp.find(x=>x[0]===k);return r?r[1]:'–'}
+function heroImg(p){return p.im?`<img class="gimg" src="${p.im}" alt="${esc(p.n)}" loading="lazy" decoding="async">`:''}
+function frame(p,badges){
+ const holo=`<div class="gholo"><i>VION · LIVE SPEC</i><div><span>${tt('Volt','वोल्ट')}</span><b>${esc(sp(p,'Nominal voltage'))}</b></div><div><span>Ah</span><b>${esc(sp(p,'Rated capacity'))}</b></div><div><span>kWh</span><b>${esc(sp(p,'Nominal energy')).replace(/ ?Wh$/,'').replace(/^(\d+)$/,m=>(m/1000).toFixed(2))}</b></div></div>`;
+ const img=p.im?`<div class="gfloat">${heroImg(p)}</div>`:`<div class="gph"><div>${esc(p.n)}<small>${tt('PHOTO AWAITED','फ़ोटो जल्द')}</small></div></div>`;
+ return `<div class="gfr"><div class="gled"></div>${FLOW}${img}<div class="gped"></div><span class="gwar">${esc(p.w)}</span><div class="gbdg">${badges}</div>${holo}</div>`}
+function enhance(){
+ const K=window.__CAT,g=document.getElementById('pcg');if(!K||!g||g.dataset.g22)return;g.dataset.g22='1';
+ const U=units(K),sorted=K.p.map((p,i)=>({i,fy:U[i].fy})).sort((a,b)=>b.fy-a.fy);
+ const best=sorted[0]&&sorted[0].fy>0?sorted[0].i:-1,top=sorted[1]&&sorted[1].fy>0?sorted[1].i:-1;
+ const cards=[...g.querySelectorAll('.pcd')];
+ cards.forEach((d,i)=>{const p=K.p[i];if(!p)return;
+  const tparts=String(p.t||'').split('·'),bad=(i===best?`<span class="bs">${I.crown}${tt('Best Seller','बेस्ट सेलर')}</span>`:'')+(i===top?`<span class="tr">${I.star}${tt('Top Rated','टॉप रेटेड')}</span>`:'');
+  const pcs=d.querySelector('.pcs'),pcu=d.querySelector('.pcu');
+  const chips=`<div class="gchips"><span class="gchip li">${I.atom}${tt('Lithium LFP','लिथियम LFP')}</span>${tparts.map(chipFor).join('')}</div>`;
+  const body=`<div class="pcb"><h4>${esc(p.n)}</h4>${chips}<div class="gcap">${p.hl.map(h=>`<span>${esc(h)}</span>`).join('')}</div><div class="gprice"><div><small>${tt('Dealer price','डीलर प्राइस')}</small><b>${p.dp?fm(p.dp):'–'}</b></div><div style="text-align:right"><small>MRP</small><b>${p.mrp?fm(p.mrp):'–'}</b></div></div>${pcu?pcu.outerHTML:''}<div class="gbtn"><button type="button" class="gc${CMP.includes(p.id)?' on':''}" data-gc="${p.id}">${I.cmp}<span>${CMP.includes(p.id)?tt('Added','जोड़ा'):tt('Compare','तुलना')}</span></button><button type="button" class="gv" data-gx="1">${I.eye}<span>${tt('View Details','विवरण देखें')}</span></button></div></div>`;
+  d.innerHTML=frame(p,bad)+body+(pcs?pcs.outerHTML:'');d.classList.toggle('open',false)});
+ /* stage */
+ const chipRow=document.querySelector('#s-cat .pcf');
+ const stage=document.createElement('div');stage.className='cstage gl-'+mode();stage.id='cstage';
+ g.parentNode.insertBefore(stage,chipRow||g);
+ const hero=K.p[best>=0?best:K.p.findIndex(p=>p.id==='51314f')]||K.p[0],hi=K.p.indexOf(hero);
+ const tot=sum(U.map(u=>u.fy)),notb=K.p.filter((p,i)=>!U[i].fy&&p.mrp);
+ const mover=U.map((u,i)=>({i,mo:u.mo})).sort((a,b)=>b.mo-a.mo)[0];
+ const ins=[];
+ if(best>=0)ins.push(tt(`<b>${esc(hero.n)}</b> leads the range with ${f0(U[hi].fy)} units billed, ${tot?Math.round(U[hi].fy/tot*100):0}% of all catalogue units.`,`<b>${esc(hero.n)}</b> रेंज में आगे है: ${f0(U[hi].fy)} यूनिट बिल, कुल का ${tot?Math.round(U[hi].fy/tot*100):0}%।`));
+ if(mover&&mover.mo>0)ins.push(tt(`This month's fastest mover: <b>${esc(K.p[mover.i].n)}</b> with ${f0(mover.mo)} units in ${esc(D.months[cur])}.`,`इस महीने का सबसे तेज़: <b>${esc(K.p[mover.i].n)}</b>, ${esc(D.months[cur])} में ${f0(mover.mo)} यूनिट।`));
+ if(notb.length)ins.push(tt(`Opportunity: <b>${notb.length}</b> priced products are not billed yet, starting with ${esc(notb.slice(0,3).map(p=>p.n.replace('VION ','')).join(', '))}.`,`अवसर: <b>${notb.length}</b> प्राइस वाले प्रोडक्ट अभी बिल नहीं हुए, जैसे ${esc(notb.slice(0,3).map(p=>p.n.replace('VION ','')).join(', '))}।`));
+ if(!ins.length)ins.push(tt('Flagship pick: the highest-capacity pack in the range.','फ़्लैगशिप: रेंज का सबसे बड़ा पैक।'));
+ stage.innerHTML=`<canvas class="gpt" aria-hidden="true"></canvas><div class="gtop"><span class="gttl">${tt('VION · Product Showroom','VION · प्रोडक्ट शोरूम')}</span><button type="button" class="gmode gglass" id="gmode">${mode()==='dark'?I.sun:I.moon}<span>${mode()==='dark'?tt('Light glass','लाइट ग्लास'):tt('Dark glass','डार्क ग्लास')}</span></button></div>
+ <div class="gspot gglass"><div class="gfr ghero" style="min-height:0;margin:0;height:200px"><div class="gled"></div>${FLOW}${hero.im?`<div class="gfloat" style="width:70%;margin-bottom:0"><img class="gimg" style="max-height:170px" src="${hero.im}" alt=""></div>`:''}</div>
+ <div><div class="gbadge">${I.spark} ${tt('AI product spotlight','AI प्रोडक्ट स्पॉटलाइट')} · ${tt('live from billing data','बिलिंग डेटा से लाइव')}</div><h3>${esc(hero.n)}</h3><div class="gsub">${esc(hero.t)}${hero.dp?' · '+tt('Dealer','डीलर')+' '+fm(hero.dp):''}</div><div class="gins" id="gins"></div><div class="gdots" id="gdots">${ins.map((_,i)=>`<i data-gi="${i}"></i>`).join('')}</div></div></div>
+ <div class="gcmp gglass" id="gcmp" hidden></div><div id="gslot"></div>`;
+ stage.querySelector('#gslot').replaceWith(...[chipRow,g].filter(Boolean));
+ const show=i=>{SPI=i%ins.length;const e=stage.querySelector('#gins');if(!e)return;e.style.opacity=0;setTimeout(()=>{e.innerHTML=ins[SPI];e.style.opacity=1},200);stage.querySelectorAll('#gdots i').forEach((d,j)=>d.classList.toggle('on',j===SPI))};
+ stage.querySelector('#gins').innerHTML=ins[0];stage.querySelectorAll('#gdots i')[0].classList.add('on');
+ clearInterval(SPT);SPT=setInterval(()=>{if(!document.getElementById('gins'))return clearInterval(SPT);show(SPI+1)},6500);
+ stage.querySelector('#gdots').onclick=e=>{const t=e.target.closest('[data-gi]');if(t)show(+t.dataset.gi)};
+ cmpRender();particles(stage.querySelector('canvas'))}
+function cmpRender(){
+ const K=window.__CAT,box=document.getElementById('gcmp');if(!box||!K)return;
+ const ps=CMP.map(id=>K.p.find(p=>p.id===id)).filter(Boolean);box.hidden=ps.length<2;if(ps.length<2)return;
+ const rows=['Nominal voltage','Rated capacity','Nominal energy','Weight','Dimensions (L×B×H)','Standard discharge current'];
+ box.innerHTML=`<div class="gch"><span>${tt('Compare','तुलना')} · ${ps.length}</span><button type="button" data-gclear="1">${tt('Clear','हटाएँ')}</button></div><table><tr><th></th>${ps.map(p=>`<th>${esc(p.n.replace('VION ',''))}</th>`).join('')}</tr>${rows.map(r=>`<tr><td>${r}</td>${ps.map(p=>`<td>${esc(sp(p,r))}</td>`).join('')}</tr>`).join('')}<tr><td>${tt('Dealer price','डीलर प्राइस')}</td>${ps.map(p=>`<td><b>${p.dp?fm(p.dp):'–'}</b></td>`).join('')}</tr><tr><td>MRP</td>${ps.map(p=>`<td><b>${p.mrp?fm(p.mrp):'–'}</b></td>`).join('')}</tr></table>`}
+function particles(cv){
+ if(!cv||matchMedia('(prefers-reduced-motion: reduce)').matches)return;cancelAnimationFrame(RAF);
+ const x=cv.getContext('2d');let W=0,H=0;const cols=['14,165,233','125,211,252','255,215,0','248,250,252'];
+ const rs=()=>{const r=cv.getBoundingClientRect();W=cv.width=Math.max(1,r.width|0);H=cv.height=Math.max(1,r.height|0)};rs();
+ const P=Array.from({length:46},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2.2+.6,v:Math.random()*.28+.08,d:Math.random()*6.28,c:cols[(Math.random()*cols.length)|0],a:Math.random()*.5+.2}));
+ const tick=()=>{if(!document.body.contains(cv))return;if(document.hidden){RAF=requestAnimationFrame(tick);return}
+  if(Math.abs(cv.getBoundingClientRect().width-W)>8)rs();x.clearRect(0,0,W,H);
+  P.forEach(p=>{p.y-=p.v;p.x+=Math.sin(p.d+=.01)*.25;if(p.y<-6){p.y=H+6;p.x=Math.random()*W}x.beginPath();x.fillStyle=`rgba(${p.c},${p.a})`;x.shadowColor=`rgba(${p.c},.8)`;x.shadowBlur=8;x.arc(p.x,p.y,p.r,0,6.28);x.fill()});RAF=requestAnimationFrame(tick)};tick()}
+document.addEventListener('click',e=>{
+ const t=e.target&&e.target.closest?e.target.closest('[data-gx],[data-gc],#gmode,[data-gclear]'):null;if(!t)return;
+ const st=document.getElementById('cstage');
+ if(t.dataset.gx){const d=t.closest('.pcd');d.classList.toggle('open');t.querySelector('span').textContent=d.classList.contains('open')?tt('Hide details','विवरण छिपाएँ'):tt('View Details','विवरण देखें')}
+ else if(t.dataset.gc){const id=t.dataset.gc;CMP=CMP.includes(id)?CMP.filter(z=>z!==id):CMP.concat(id).slice(-3);document.querySelectorAll('[data-gc]').forEach(b=>{const on=CMP.includes(b.dataset.gc);b.classList.toggle('on',on);b.querySelector('span').textContent=on?tt('Added','जोड़ा'):tt('Compare','तुलना')});cmpRender();if(CMP.length>=2){const b=document.getElementById('gcmp');if(b)b.scrollIntoView({behavior:'smooth',block:'nearest'})}}
+ else if(t.dataset.gclear){CMP=[];document.querySelectorAll('[data-gc]').forEach(b=>{b.classList.remove('on');b.querySelector('span').textContent=tt('Compare','तुलना')});cmpRender()}
+ else if(t.id==='gmode'&&st){THEME=st.classList.contains('gl-dark')?'light':'dark';try{localStorage.setItem('catGlass',THEME)}catch(e){}st.className='cstage gl-'+THEME;t.innerHTML=(THEME==='dark'?I.sun:I.moon)+'<span>'+(THEME==='dark'?tt('Light glass','लाइट ग्लास'):tt('Dark glass','डार्क ग्लास'))+'</span>'}
+});
+const _r=render;render=function(){_r.apply(this,arguments);try{enhance()}catch(e){console.error('p22',e)}};
+})();
+
 /* ===== ULTRON AI COMMAND CENTER (its own tab; not part of Mission, Revenue or any other page) =====
    What is real here: every number comes from the loaded workbook (D / X). Open questions go to Claude through the page's `sample`
    capability, when the viewer allows it. What is not real: there is no live web access in this viewer, so news, global scores and
