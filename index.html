@@ -489,6 +489,10 @@ body.board #boardv{display:flex;flex-direction:column;position:fixed;inset:0;z-i
 .psbar{display:flex;align-items:center;gap:8px;margin:4px 0}.psbar i{display:block;height:16px;width:var(--w);background:var(--c);min-width:3px;transition:width .8s cubic-bezier(.2,.7,.2,1)}.psbar em{font:600 12.5px var(--mono);font-style:normal;color:#1E2633}
 .pss{display:grid;gap:8px}.pssr span{display:block;font:600 13px var(--body);color:#1E2633}
 .psls{display:grid;gap:8px;max-height:560px;overflow:auto;padding-right:2px}
+.psc.hz{grid-column:1/-1}
+.psc.hz .psls{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));max-height:none;overflow:visible;gap:10px}
+.psc.hz .psl{flex-direction:column;align-items:stretch;justify-content:flex-start;padding:12px 14px;gap:8px;border-radius:14px}
+.psc.hz .psl>div:first-child{min-width:0}
 .psl{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#DDE1E7;border-radius:8px;padding:8px 10px;cursor:pointer}
 .psl:hover{background:#E8EBF0}.psl b{display:block;font-size:14px;color:#1E2633}.psl small{font-size:11.5px;color:#3A4558}
 .psp{flex:none;background:var(--c);color:#fff;font:700 12px var(--mono);padding:4px 10px;border-radius:999px;white-space:nowrap}
@@ -1605,8 +1609,7 @@ function psalesHTML(x){
   <div class="psc lt"><h3>${tt('Target vs Billed by ASM (₹ L)','ASM-वार लक्ष्य बनाम बिल (₹ L)')}</h3><div class="psleg"><span><i style="--c:${PSC.pink}"></i>${tt('Target','लक्ष्य')}</span><span><i style="--c:${PSC.maroon}"></i>${tt('Billed','बिल')}</span></div>
    <div class="psab">${z.asms.map(a=>{const mx=Math.max(.01,...z.asms.map(q=>Math.max(q.t,q.b)));return `<div class="psa"><div class="psan"><b>${esc(a.a)}</b> · ${a.t>0?pct(a.r)+' '+tt('of target','लक्ष्य का'):tt('no target','लक्ष्य नहीं')}</div>
     <div class="psbar"><i style="--w:${(a.t/mx*100).toFixed(1)}%;--c:${PSC.pink}"></i><em>${f1(a.t)}</em></div><div class="psbar"><i style="--w:${(Math.max(0,a.b)/mx*100).toFixed(1)}%;--c:${PSC.maroon}"></i><em>${f1(a.b)}</em></div></div>`}).join('')}</div></div>
-  <div class="psc lt ch2"><h3>${tt('Distributor Target vs Billed (₹ L)','डिस्ट्रीब्यूटर लक्ष्य बनाम बिल (₹ L)')}</h3><div class="pscv tall"><canvas id="cPsT" role="img" aria-label="${tt('Distributor target vs billed','डिस्ट्रीब्यूटर लक्ष्य बनाम बिल')}"></canvas></div></div>
-    <div class="psc lt ch2"><h3>${tt(`Distributor Billing · ${ms} MTD`,`डिस्ट्रीब्यूटर बिलिंग · ${ms} MTD`)}</h3><p class="psn dk">${tt(`Green ≥100% · Amber 90–99% · Red <90% · Grey = no ${ms} target`,`हरा ≥100% · पीला 90–99% · लाल <90% · ग्रे = ${ms} लक्ष्य नहीं`)}</p><div class="psls">${list||`<p class="psn dk">${tt('No distributors in this view.','इस दृश्य में डिस्ट्रीब्यूटर नहीं।')}</p>`}</div></div>
+    <div class="psc lt ch2 hz"><h3>${tt(`Distributor Billing · ${ms} MTD`,`डिस्ट्रीब्यूटर बिलिंग · ${ms} MTD`)}</h3><p class="psn dk">${tt(`Green ≥100% · Amber 90–99% · Red <90% · Grey = no ${ms} target`,`हरा ≥100% · पीला 90–99% · लाल <90% · ग्रे = ${ms} लक्ष्य नहीं`)}</p><div class="psls">${list||`<p class="psn dk">${tt('No distributors in this view.','इस दृश्य में डिस्ट्रीब्यूटर नहीं।')}</p>`}</div></div>
  </div>
  <div class="ps-ft"><span>${tt('Source: VION ASM Wise Dashboard (Target vs Achievement, Monthly Business, SKU Summary).','स्रोत: VION ASM वाइज़ डैशबोर्ड।')}</span><span>${tt('Achievement uses billing incl GST against target incl GST, as in the workbook.','उपलब्धि: GST सहित बिल बनाम GST सहित लक्ष्य, वर्कबुक की तरह।')}</span></div>
 </section>`;
