@@ -3485,6 +3485,9 @@ function boot(){const b=$('boot');if(!b)return;let seen=false;try{seen=sessionSt
 #vlog .vbr .vlogo{display:flex;align-items:center;gap:10px;color:#facc15}
 #vlog .vbr b{display:inline;font:700 21px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#fff}
 #vlog .vbr span{margin-top:8px;font:600 11px 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.3em;text-transform:uppercase;color:#7f93bd}
+#vlog .vwm{margin-top:16px;font:700 19px/1.2 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#fff}
+#vlog .vwm b{display:inline;color:#facc15;font:inherit;letter-spacing:inherit}
+#vlog .vtg{margin-top:9px;font:600 11px 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.26em;text-transform:uppercase;background:linear-gradient(90deg,#facc15,#22c55e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 #vlog h1{font-size:28px;letter-spacing:0}
 #vlog label{color:#facc15}
 #vlog input{background:#050a18;border:1px solid rgba(255,255,255,.15);border-radius:12px}
@@ -3517,7 +3520,7 @@ function boot(){const b=$('boot');if(!b)return;let seen=false;try{seen=sessionSt
   const logo=(document.querySelector('img.lv')||{}).src||'';
   const w=document.createElement('div');w.id='vlog';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-labelledby','vlogt');
   w.innerHTML=`<form class="vcard" id="vform" novalidate>
-   <div class="vbr"><div class="vlogo">${logo?`<img class="vphl" src="${logo}" alt="PowerHive">`:`<b>PowerHive</b>`}</div><span>Sales Intelligence</span></div>
+   <div class="vbr"><div class="vlogo">${logo?`<img class="vphl" src="${logo}" alt="PowerHive">`:`<b>PowerHive</b>`}</div><div class="vwm"><b>VION</b> Sales Intelligence</div><div class="vtg">Command. Analyze. Accelerate.</div></div>
    <div class="vlg"><div><h1 id="vlogt">${T('Welcome back','वापसी पर स्वागत है')}</h1><p class="vsub">${T('Sign in to see your territory','अपना क्षेत्र देखने के लिए साइन इन करें')}</p></div></div>
    <label for="vid">${T('Login ID','लॉगिन ID')}</label><input id="vid" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
    <label for="vpw">${T('Password','पासवर्ड')}</label><div class="vpw"><input id="vpw" type="password" name="password" autocomplete="current-password" required><button type="button" id="vshow">${T('Show','दिखाएँ')}</button></div>
