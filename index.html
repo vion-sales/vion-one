@@ -2948,7 +2948,7 @@ function groupTabs(){
  GROUPS.forEach(gp=>{const b=gp[3].map(id=>t.querySelector('[data-pg="'+id+'"]')).find(Boolean);if(!b)return;const h=document.createElement('div');h.className='tg';h.textContent=tt(gp[1],gp[2]);t.insertBefore(h,b)});
 }
 {const st=document.createElement('style');st.id='p18css';st.textContent=`
-#tabs .tg{font:700 10px/1 var(--mono,ui-monospace,monospace);letter-spacing:.14em;text-transform:uppercase;color:var(--mut);padding:12px 12px 5px;opacity:.85}
+#tabs .tg{font:700 10px/1 var(--body,sans-serif);letter-spacing:.14em;text-transform:uppercase;color:var(--mut);padding:12px 12px 5px;opacity:.85}
 #tabs .tg:first-child{padding-top:4px}
 .p8t{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:4px 18px 12px}
 .p8t select,.p8t input{border:1px solid var(--line2);background:var(--card);color:var(--txt);border-radius:10px;padding:8px 12px;font:600 13px inherit;max-width:100%}
@@ -3062,7 +3062,8 @@ if(typeof renderNav==='function'){const _n=renderNav;renderNav=function(){_n.app
 document.body.classList.add('ultra');
 const G='.sec,.kpi,.gauge,.tile,.rvk>div,.rvc>div,.rvg>div,.gfoot>div,.calside>div';
 const st=document.createElement('style');st.id='ultraCss';st.textContent=`
-body.ultra{--ur:26px;--rim:rgba(255,255,255,.16)}
+body.ultra{--ur:26px;--rim:rgba(255,255,255,.16);--mono:var(--body)}
+body.ultra .mono,body.ultra [class*="mono"]{font-variant-numeric:tabular-nums}
 /* living space: deep blue-violet field + fine instrument grid */
 body.ultra:not(.lite) #aur i:nth-child(1){background:radial-gradient(circle,#2f6bff,transparent 64%);opacity:.55}
 body.ultra:not(.lite) #aur i:nth-child(2){background:radial-gradient(circle,#9b5cff,transparent 64%);opacity:.5}
@@ -3080,19 +3081,20 @@ body.ultra:not(.lite) :is(.rvk>div,.kpi,.rvc>div,.rvg>div){border-radius:20px!im
 body.ultra:not(.lite) :is(.rvk>div,.kpi,.rvc>div):hover{transform:translateY(-3px);box-shadow:0 40px 70px -34px rgba(0,0,0,.8),0 2px 0 rgba(255,255,255,.1) inset,0 -26px 50px -36px rgba(120,160,255,.3) inset}
 /* executive tiles: coloured status edge (Fabric) + calm numerals (Tesla) */
 body.ultra:not(.lite) .rvk>div{border-top:0!important;box-shadow:0 34px 60px -34px rgba(0,0,0,.75),0 2px 0 rgba(255,255,255,.07) inset,0 -26px 50px -36px rgba(120,160,255,.22) inset,0 1px 0 0 var(--c) inset}
-body.ultra :is(.rvk .k,.kpi .k,.rvg .t span){font:600 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+body.ultra :is(.rvk .k,.kpi .k){font:600 10.5px var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
 body.ultra .rvk .v{font:600 30px/1.1 var(--disp);letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+body.ultra .rvg .t span{font:400 12px/1.4 var(--body);letter-spacing:0;text-transform:none;color:var(--txt2)}
 body.ultra .rvk .s{font-size:11.5px;letter-spacing:.01em}
 /* section headers: precise, gradient title, hairline */
 body.ultra .rvh h3{font-weight:600;letter-spacing:-.015em}
 body.ultra .rvh h3 small{font:500 12px var(--body);letter-spacing:.01em;color:var(--mut);margin-top:3px}
-body.ultra .rvh .n{font:600 11px var(--mono);letter-spacing:.08em;border-radius:10px}
+body.ultra .rvh .n{font:600 11px var(--body);letter-spacing:.08em;border-radius:10px}
 body.ultra .rvu{height:1px;background:linear-gradient(90deg,rgba(255,214,10,.65),rgba(255,255,255,.12) 38%,transparent)!important;box-shadow:none!important}
 /* terminal-grade tables (Bloomberg, modernised) */
 body.ultra .rvt table{border-collapse:separate;border-spacing:0}
-body.ultra .rvt th{font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mut);background:rgba(255,255,255,.025);border-bottom:1px solid rgba(255,255,255,.12)!important;position:sticky;top:0;z-index:1;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+body.ultra .rvt th{font:600 10px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--mut);background:rgba(255,255,255,.025);border-bottom:1px solid rgba(255,255,255,.12)!important;position:sticky;top:0;z-index:1;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 body.ultra .rvt td{font-variant-numeric:tabular-nums;border-bottom:1px solid rgba(255,255,255,.055)!important;transition:background .2s}
-body.ultra .rvt td:not(.l){font-family:var(--mono);font-size:12.5px;letter-spacing:-.01em}
+body.ultra .rvt td:not(.l){font-family:var(--body);font-size:13px}
 body.ultra .rvt tbody tr:hover td,body.ultra .rvt tr:hover>td{background:rgba(120,160,255,.08)}
 body.ultra .rvt tr.tot td{background:linear-gradient(180deg,rgba(255,214,10,.1),rgba(255,214,10,.03));border-top:1px solid rgba(255,214,10,.45)!important;color:var(--hi);font-weight:700}
 :root[data-theme="light"] body.ultra .rvt th{background:rgba(15,23,42,.035);border-bottom-color:rgba(15,23,42,.12)!important}
@@ -3108,9 +3110,9 @@ body.ultra .rvp{box-shadow:0 6px 16px -6px rgba(0,0,0,.6),0 1px 0 rgba(255,255,2
 body.ultra:not(.lite) #tabs.tabs button{border-radius:14px;transition:background .2s,color .2s,box-shadow .2s;letter-spacing:.005em}
 body.ultra:not(.lite) #tabs.tabs button:hover{background:rgba(255,255,255,.06)}
 body.ultra:not(.lite) #tabs.tabs button.on{background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.05))!important;color:var(--hi)!important;box-shadow:0 1px 0 rgba(255,255,255,.28) inset,0 10px 24px -12px rgba(47,107,255,.7),0 0 0 1px rgba(255,255,255,.1) inset}
-body.ultra #tabs .tg{font:600 9.5px var(--mono);letter-spacing:.2em;color:var(--mut);opacity:.9}
+body.ultra #tabs .tg{font:600 9.5px var(--body);letter-spacing:.2em;color:var(--mut);opacity:.9}
 /* instrument ticker (Bloomberg amber) */
-body.ultra .tick{background:linear-gradient(180deg,rgba(255,214,10,.07),rgba(255,214,10,.015))!important;border-bottom:1px solid rgba(255,214,10,.22)!important;font-family:var(--mono);letter-spacing:.04em}
+body.ultra .tick{background:linear-gradient(180deg,rgba(255,214,10,.07),rgba(255,214,10,.015))!important;border-bottom:1px solid rgba(255,214,10,.22)!important;font-family:var(--body);letter-spacing:.04em}
 /* controls: glass inputs, soft focus ring */
 body.ultra select,body.ultra input[type=search],body.ultra input[type=text],body.ultra .p8s{background:color-mix(in srgb,var(--card) 55%,transparent)!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:12px!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 body.ultra :is(select,input,button):focus-visible{outline:none;box-shadow:0 0 0 3px rgba(47,107,255,.45)}
@@ -3135,19 +3137,22 @@ const st=document.createElement('style');st.id='medalCss';st.textContent=`
 .medal{display:inline-block;margin-right:.3em;font-size:1.2em;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45));animation:mdl 3.6s ease-in-out infinite;transform-origin:50% 80%}
 .medal.m0{filter:drop-shadow(0 0 8px rgba(255,200,61,.75))}
 @keyframes mdl{0%,88%,100%{transform:none}92%{transform:rotate(-14deg) scale(1.15)}96%{transform:rotate(10deg) scale(1.1)}}
-.mdc0{box-shadow:0 0 0 1px rgba(255,200,61,.6),0 0 34px -6px rgba(255,200,61,.55)!important}
-.mdc1{box-shadow:0 0 0 1px rgba(201,210,222,.5),0 0 26px -8px rgba(201,210,222,.45)!important}
-.mdc2{box-shadow:0 0 0 1px rgba(217,135,59,.5),0 0 26px -8px rgba(217,135,59,.45)!important}
-.mdr{display:inline-block;margin-left:.5em;padding:1px 8px;border-radius:999px;font:700 10px var(--mono,monospace);letter-spacing:.08em;text-transform:uppercase;color:#1a1204;vertical-align:middle;background:var(--mc)}
+.mdc0{--mc:#FFC83D;box-shadow:0 0 0 1px rgba(255,200,61,.65),0 0 34px -6px rgba(255,200,61,.5),inset 0 0 70px -28px rgba(255,200,61,.5)!important}
+.mdc1{--mc:#C9D2DE;box-shadow:0 0 0 1px rgba(201,210,222,.6),0 0 28px -8px rgba(201,210,222,.45),inset 0 0 70px -28px rgba(201,210,222,.4)!important}
+.mdc2{--mc:#D9873B;box-shadow:0 0 0 1px rgba(217,135,59,.65),0 0 28px -8px rgba(217,135,59,.5),inset 0 0 70px -28px rgba(217,135,59,.45)!important}
+.mdc0,.mdc1,.mdc2{position:relative}
+.mdc0::before,.mdc1::before,.mdc2::before{content:'';position:absolute;left:22px;right:22px;top:0;height:3px;border-radius:0 0 4px 4px;background:var(--mc);box-shadow:0 0 14px var(--mc);z-index:2}
+.mdc0::before{background:linear-gradient(90deg,#B8860B,#FFE27A,#FFC83D,#B8860B)}.mdc1::before{background:linear-gradient(90deg,#8A94A3,#F4F7FB,#C9D2DE,#8A94A3)}.mdc2::before{background:linear-gradient(90deg,#8C4A17,#F0A862,#D9873B,#8C4A17)}
+.mdr{display:inline-block;margin-left:.5em;padding:1px 8px;border-radius:999px;font:700 10px var(--body,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:#1a1204;vertical-align:middle;background:var(--mc)}
 body .medal,body .mdr{display:inline-block!important;margin-top:0!important;width:auto!important;flex:none}
-body .rvg .t .medal{font-size:1.25em;letter-spacing:0}
-body .mdr{margin-left:.55em!important;padding:1px 8px!important;font:700 10px var(--mono,monospace)!important;letter-spacing:.1em!important;color:#1a1204!important}
+body .rvg .t .medal{font-size:1.35em;letter-spacing:0}
+body .mdr{margin-left:.55em!important;padding:1px 8px!important;font:700 10px var(--body,sans-serif)!important;letter-spacing:.1em!important;color:#1a1204!important}
 @media(prefers-reduced-motion:reduce){.medal{animation:none}}
 `;document.head.appendChild(st);
 function ranks(){
  try{if(!D||!D.dist||typeof ASMS==='undefined'||ASMS.length<2)return null;
   const r=ASMS.map(a=>{const L=D.dist.filter(d=>d.asm===a),T=L.reduce((s,d)=>s+(d.tgt||0),0),A=L.reduce((s,d)=>s+(d.ach||0),0);return {a,p:T>0?A/T:0,A}}).sort((x,y)=>y.p-x.p||y.A-x.A);
-  const o={};r.forEach((x,i)=>{if(i<3&&x.p>0)o[x.a]={i,p:x.p}});return o}catch(e){return null}}
+  const o={};r.forEach((x,i)=>{if(i<3&&(x.p>0||r[0].p>0))o[x.a]={i,p:x.p}});return o}catch(e){return null}}
 function medals(){
  const main=document.getElementById('main');if(!main)return;
  main.querySelectorAll('.medal,.mdr').forEach(e=>e.remove());
