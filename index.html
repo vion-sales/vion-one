@@ -3238,7 +3238,7 @@ const st=document.createElement('style');st.id='p21css';st.textContent=`
 #wm span{font:600 10px Inter,sans-serif;letter-spacing:.5em;text-transform:uppercase;color:${GOLD};opacity:.35}
 .vnrow{display:flex;align-items:center;gap:10px;margin:10px 0 0;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(217,182,92,.22)}
 .vnrow img{height:24px;width:auto;border-radius:6px;background:#fff;padding:2px 5px}
-.vnrow span{font:600 9.5px/1.25 Inter,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:${GOLD}}.vnrow span b{font-weight:800;font-size:11.5px;letter-spacing:.18em}
+.vnrow span{font:600 9.5px/1.25 Inter,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:${GOLD}}.vnrow img{height:30px;cursor:pointer}.vnrow span{font-size:11px;letter-spacing:.24em}body:not(.sbc) #logoHome{display:none!important}
 body.sbc .vnrow{display:none}
 @media(max-width:699px){#wm{display:none}}
 `;document.head.appendChild(st);
@@ -3289,7 +3289,7 @@ function brand(){
  try{
   if(window.__VIONLOGO&&!document.getElementById('wm')){const d=document.createElement('div');d.id='wm';d.setAttribute('aria-hidden','true');d.innerHTML=`<img src="${window.__VIONLOGO}" alt=""><span>PowerHive Sales Intelligence</span>`;document.body.appendChild(d)}
   const bt=document.querySelector('#brand .bt');
-  if(bt&&window.__VIONLOGO&&!document.querySelector('#brand .vnrow')){const r=document.createElement('div');r.className='vnrow';r.innerHTML=`<span><b>PowerHive</b><br>Sales Intelligence</span>`;bt.parentNode.insertBefore(r,bt.nextSibling)}
+  if(bt&&window.__VIONLOGO&&!document.querySelector('#brand .vnrow')){const r=document.createElement('div');r.className='vnrow';r.innerHTML=`<img src="${window.__VIONLOGO}" alt="PowerHive" id="vnLogo"><span>Sales<br>Intelligence</span>`;bt.parentNode.insertBefore(r,bt.nextSibling)}
  }catch(e){}}
 const _r=render;render=function(){_r.apply(this,arguments);try{tiles();inr(document.getElementById('main'));inr(document.getElementById('brand'));brand()}catch(e){console.error('p21',e)}};
 })();
@@ -3825,7 +3825,7 @@ if(typeof render==='function'){const _r=render;render=function(){_r.apply(this,a
 .lnd tr.dr td.t{color:#0B5D2E;font-weight:700;font-variant-numeric:tabular-nums}
 .lnd tr.dr td.t small{color:var(--mut);font-weight:500}
 :root[data-theme="dark"] .lnd tr.dr td.t{color:#3FBF7F}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lnd tr.dr td.t{color:#3FBF7F}}`;document.head.appendChild(st)})();
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lnd tr.dr td.t{color:#3FBF7F}}`;document.head.appendChild(st);document.addEventListener('click',e=>{if(e.target&&e.target.id==='vnLogo'&&typeof setPage==='function')setPage('score')});})();
 
 /* ===== ULTRON AI COMMAND CENTER (its own tab; not part of Mission, Revenue or any other page) =====
    What is real here: every number comes from the loaded workbook (D / X). Open questions go to Claude through the page's `sample`
