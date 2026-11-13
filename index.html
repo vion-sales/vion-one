@@ -577,7 +577,9 @@ function colors(){C={cyan:cvar('--cyan'),blue:cvar('--blue'),purple:cvar('--purp
 let asof,cur,first,dim,elapsed,dimW,elW,wdc,ASMS,age,GST;
 function derive(){
  asof=utc(D.asof);const ms=utc(D.mstart);dim=new Date(Date.UTC(ms.getUTCFullYear(),ms.getUTCMonth()+1,0)).getUTCDate();
- elapsed=asof<ms?0:(asof>new Date(Date.UTC(ms.getUTCFullYear(),ms.getUTCMonth()+1,0))?dim:asof.getUTCDate());
+ /* days gone = completed days up to yesterday (IST) or the last invoice date, whichever is later; the source feed is complete to today, so days without invoices still count */
+ const ist=new Date(Date.now()+19800000),yd=new Date(Date.UTC(ist.getUTCFullYear(),ist.getUTCMonth(),ist.getUTCDate()-1)),ref=yd>asof?yd:asof;
+ elapsed=ref<ms?0:(ref>new Date(Date.UTC(ms.getUTCFullYear(),ms.getUTCMonth()+1,0))?dim:ref.getUTCDate());
  /* working days: Sundays (and any dates in window.VION_HOLIDAYS) are off; pro-rata, run-rate and pace use working days */
  {const hol=new Set((window.VION_HOLIDAYS||[]).map(String));wdc=[0];for(let d=1;d<=dim;d++){const dt=new Date(Date.UTC(ms.getUTCFullYear(),ms.getUTCMonth(),d)),iso=dt.toISOString().slice(0,10);wdc.push(wdc[d-1]+((dt.getUTCDay()===0||hol.has(iso))?0:1))}dimW=wdc[dim]||dim;elW=wdc[Math.min(elapsed,dim)];if(elapsed>0&&elW===0)elW=1}
  const mk=D.mstart.slice(0,7);cur=D.mkeys.indexOf(mk);if(cur<0)cur=D.mkeys.length-1;
@@ -2636,7 +2638,7 @@ function empBody(S){
  const cards=R.map(r=>{const p=r.T>0?r.ach/(r.T*f):0,c=showP?pcol(p):ASMC[r.a],share=tot.nsv>0?r.nsv/tot.nsv:0;
   return `<div style="--c:${c}"><b>${esc(r.a)}<em>${showP?Math.round(p*100)+'% '+tt('achieved','हासिल'):'₹'+lakh(r.nsv)+' L'}</em></b><p>${tt(`NSV ex-GST ₹${lakh(r.nsv)} L · ${Math.round(share*100)}% of the team · ${r.billed} of ${r.codes} distributors billed · ${f0(r.units)} units.`,`NSV (GST के बिना) ₹${lakh(r.nsv)} L · टीम का ${Math.round(share*100)}% · ${r.codes} में से ${r.billed} डिस्ट्रीब्यूटर बिल · ${f0(r.units)} यूनिट।`)}</p></div>`}).join('');
  const k=`<div class="rvk">${tile(tt('Team NSV ex-GST','टीम NSV (GST के बिना)'),'₹'+lakh(tot.nsv)+' L',perLbl(),C.cyan)}${tile(tt('Bill value incl. GST','कुल बिल (GST सहित)'),'₹'+lakh(tot.gross)+' L',tt('invoice value','इनवॉइस मूल्य'),C.blue)}${showP?tile(tt('Pro-rata target','प्रो-राटा लक्ष्य'),'₹'+lakh(tot.T*f)+' L',pct(tp)+tt(' achieved · ',' हासिल · ')+Math.round(f*100)+tt('% of month gone','% माह बीता'),pcol(tp)):tile(tt('Employees','कर्मचारी'),R.length,'ASM',C.purple)}${tile(tt('Units','यूनिट'),f0(tot.units),tt(`${tot.billed} distributors billed`,`${tot.billed} डिस्ट्रीब्यूटर बिल`),C.orange)}</div>`;
- return k+`<div class="rvt"><table>${th}${body}${trow}</table></div><div class="rvc">${cards}</div><div class="rvn">${tt('NSV = net sales value excluding GST (from invoice lines). Pro-rata target = month target × working days elapsed ÷ working days in month (Sundays excluded); Ach % = invoice value ÷ pro-rata target, on the same basis as the rest of this dashboard.','NSV = GST के बिना नेट सेल्स वैल्यू (इनवॉइस लाइन से)। प्रो-राटा लक्ष्य = माह लक्ष्य × बीते दिन ÷ माह के दिन; Ach % = इनवॉइस मूल्य ÷ प्रो-राटा लक्ष्य।')}</div>`;
+ return k+`<div class="rvt"><table>${th}${body}${trow}</table></div><div class="rvc">${cards}</div><div class="rvn">${tt('NSV = net sales value excluding GST (from invoice lines). Pro-rata target = month target × working days gone (up to yesterday, Sundays excluded) ÷ working days in month; Ach % = invoice value ÷ pro-rata target, on the same basis as the rest of this dashboard.','NSV = GST के बिना नेट सेल्स वैल्यू (इनवॉइस लाइन से)। प्रो-राटा लक्ष्य = माह लक्ष्य × बीते दिन ÷ माह के दिन; Ach % = इनवॉइस मूल्य ÷ प्रो-राटा लक्ष्य।')}</div>`;
 }
 
 /* ---- distributor wise (Primary Sales) ---- */
@@ -2651,7 +2653,7 @@ function distBody(S){
  const trow=`<tr class="tot"><td class="l"></td><td class="l">${tt('Total','कुल')}</td><td></td>${showP?`<td>${lakh(tg)}</td><td>${lakh(tg*f)}</td>`:''}<td>${lakh(N)}</td><td>${lakh(TG)}</td><td>${lakh(T)}</td>${showP?`<td>${tg>0?pill(sum(rows.map(r=>r.d.ach))/(tg*f)):'–'}</td>`:''}<td>${sum(rows.map(r=>r.i))}</td></tr>`;
  const billed=rows.filter(r=>r.g>0).length;
  const k=`<div class="rvk">${tile(tt('Total bill value incl. GST','कुल बिल मूल्य (GST सहित)'),'₹'+lakh(T)+' L',perLbl(),C.blue)}${tile(tt('NSV ex-GST','NSV (GST के बिना)'),'₹'+lakh(N)+' L','',C.cyan)}${tile(tt('GST collected on bills','बिलों पर GST'),'₹'+lakh(TG)+' L',tt(`at ${Math.round((GST-1)*100)}%`,`${Math.round((GST-1)*100)}% पर`),C.orange)}${tile(tt('Distributors billed','बिल किए डिस्ट्रीब्यूटर'),billed,tt(`of ${L.length} on the list`,`सूची के ${L.length} में से`),C.green)}</div>`;
- return k+`<div class="rvt rvscr"><table>${th}${body}${trow}</table></div><div class="rvn">${tt('Total bill value = invoice value including GST. Pro-rata target = month target × working days elapsed ÷ working days in month (Sundays excluded); Ach % = invoice value ÷ pro-rata target. Distributors with no bill in the period show 0.','कुल बिल मूल्य = GST सहित इनवॉइस मूल्य। प्रो-राटा लक्ष्य = माह लक्ष्य × बीते दिन ÷ माह के दिन; Ach % = इनवॉइस मूल्य ÷ प्रो-राटा लक्ष्य। जिन डिस्ट्रीब्यूटर का बिल नहीं बना, वे 0 दिखते हैं।')}</div>`;
+ return k+`<div class="rvt rvscr"><table>${th}${body}${trow}</table></div><div class="rvn">${tt('Total bill value = invoice value including GST. Pro-rata target = month target × working days gone (up to yesterday, Sundays excluded) ÷ working days in month; Ach % = invoice value ÷ pro-rata target. Distributors with no bill in the period show 0.','कुल बिल मूल्य = GST सहित इनवॉइस मूल्य। प्रो-राटा लक्ष्य = माह लक्ष्य × बीते दिन ÷ माह के दिन; Ach % = इनवॉइस मूल्य ÷ प्रो-राटा लक्ष्य। जिन डिस्ट्रीब्यूटर का बिल नहीं बना, वे 0 दिखते हैं।')}</div>`;
 }
 
 /* ---- JCP (visits) ---- */
