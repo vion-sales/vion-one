@@ -3768,10 +3768,6 @@ const st=document.createElement('style');st.textContent=`
 #tabs .tg:focus-visible{outline:2px solid #D9B65C;outline-offset:-2px}
 #tabs .tg .tgx{flex:none;width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font:800 15px/1 Inter,sans-serif;letter-spacing:0;color:#17458F;background:#fff}
 #tabs .tg .tgt{font-weight:800!important;font-size:12px!important;letter-spacing:.1em;color:#fff!important;opacity:1!important}
-html[data-theme="light"] #tabs .tg .tgt{color:#0B2A5B!important}
-html[data-theme="light"] #tabs .tg .tgx{color:#fff;background:linear-gradient(135deg,#1E4B9A,#0B2A5B)}
-html[data-theme="light"] #tabs .tg{background:transparent!important;background-image:none!important;box-shadow:none!important}
-html[data-theme="light"] #tabs .tg:hover{background:rgba(11,42,91,.07)!important}
 #tabs .gh{display:none!important}`;document.head.appendChild(st);
 function apply(){const t=document.getElementById('tabs');if(!t)return;
  const act=t.querySelector('button.on'),ap=act&&act.dataset.pg;
@@ -3789,6 +3785,39 @@ if(typeof renderNav==='function'){const _n=renderNav;renderNav=function(){_n.app
 apply();
 function watch(){const t=document.getElementById('tabs');if(!t){setTimeout(watch,300);return}new MutationObserver(()=>apply()).observe(t,{childList:true});apply()}
 watch();
+})();
+
+/* p31: Controls panel grouped under bold, collapsible (+ / -) headings */
+(function(){
+const LK='vion-cgrp';let col=new Set();
+try{col=new Set(JSON.parse(localStorage.getItem(LK)||'[]'))}catch(e){}
+const save=()=>{try{localStorage.setItem(LK,JSON.stringify([...col]))}catch(e){}};
+const G=[['quick','Quick actions','क्विक एक्शन',['#bFull','#bSrch','#bReset']],['view','View & Filters','व्यू और फ़िल्टर',['#vwSel','label.sel']],['data','Data & Team','डेटा और टीम',['#bUpload','#bPresent','#bUsers']],['look','Appearance','दिखावट',['#tsb','#bTheme','#bMore','#bLite']],['acc','Account','अकाउंट',['#bOut']]];
+const st=document.createElement('style');st.textContent=`
+#hctl .cg{grid-column:1/-1;flex:0 0 auto;width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;user-select:none;padding:7px 8px 7px 12px;margin:8px 0 2px;border-radius:8px;background:linear-gradient(135deg,#17458F,#2A6FD1);box-shadow:0 2px 8px rgba(23,69,143,.35)}
+#hctl .cg:hover{filter:brightness(1.12)}
+#hctl .cg:focus-visible{outline:2px solid #D9B65C;outline-offset:-2px}
+#hctl .cg .cgt{font:800 12px Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fff}
+#hctl .cg .cgx{flex:none;width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font:800 15px/1 Inter,sans-serif;color:#17458F;background:#fff}
+#hctl .cgh{display:none!important}`;document.head.appendChild(st);
+let obs=null,busy=false;
+function apply(){const h=document.getElementById('hctl');if(!h||busy)return;busy=true;if(obs)obs.disconnect();
+ try{const seq=[];
+  G.forEach(g=>{const items=[];g[3].forEach(s=>{try{h.querySelectorAll(':scope > '+s).forEach(x=>{if(!items.includes(x))items.push(x)})}catch(e){}});items.forEach(i=>i.classList.remove('cgh'));const any=items.some(i=>getComputedStyle(i).display!=='none');
+   if(!items.length||!any){const o=h.querySelector(':scope > .cg[data-k="'+g[0]+'"]');if(o)o.style.display='none';seq.push(...(o?[o]:[]),...items);return}
+   let hd=h.querySelector(':scope > .cg[data-k="'+g[0]+'"]');
+   if(!hd){hd=document.createElement('div');hd.className='cg';hd.dataset.k=g[0];hd.setAttribute('role','button');hd.tabIndex=0;hd.innerHTML='<span class="cgt"></span><span class="cgx" aria-hidden="true"></span>'}
+   hd.style.display='';const c=col.has(g[0]);hd.querySelector('.cgt').textContent=tt(g[1],g[2]);hd.setAttribute('aria-expanded',String(!c));hd.querySelector('.cgx').textContent=c?'+':'−';hd.title=c?'Show items':'Hide items';
+   items.forEach(i=>i.classList.toggle('cgh',c));seq.push(hd,...items)});
+  seq.forEach((n,i)=>{n.style.setProperty('order',String(i+1),'important');if(h.children[i]!==n)h.insertBefore(n,h.children[i]||null)})}
+ catch(e){console.error('p31',e)}
+ busy=false;if(obs)obs.observe(h,{childList:true})}
+function tog(k){col.has(k)?col.delete(k):col.add(k);save();apply()}
+document.addEventListener('click',e=>{const h=e.target.closest&&e.target.closest('#hctl .cg');if(h)tog(h.dataset.k)});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('#hctl .cg')){e.preventDefault();tog(e.target.dataset.k)}});
+function watch(){const h=document.getElementById('hctl');if(!h){setTimeout(watch,300);return}obs=new MutationObserver(()=>apply());apply()}
+watch();
+if(typeof render==='function'){const _r=render;render=function(){_r.apply(this,arguments);apply()}}
 })();
 
 /* ===== ULTRON AI COMMAND CENTER (its own tab; not part of Mission, Revenue or any other page) =====
