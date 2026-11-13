@@ -574,17 +574,19 @@ const fmtD=(iso,o={day:'2-digit',month:'short'})=>utc(iso).toLocaleDateString('e
 const cvar=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 function colors(){C={cyan:cvar('--cyan'),blue:cvar('--blue'),purple:cvar('--purple'),pink:cvar('--pink'),green:cvar('--green'),orange:cvar('--orange'),red:cvar('--red'),mut:cvar('--mut'),bd:cvar('--bd'),txt:cvar('--txt2'),card:cvar('--card'),card2:cvar('--card2'),hi:cvar('--hi'),fg:cvar('--fg'),line2:cvar('--line2'),grid:cvar('--grid'),tint:cvar('--tint'),a1:cvar('--a1'),a2:cvar('--a2'),a3:cvar('--a3')};}
 /* derive globals from D */
-let asof,cur,first,dim,elapsed,ASMS,age,GST;
+let asof,cur,first,dim,elapsed,dimW,elW,wdc,ASMS,age,GST;
 function derive(){
  asof=utc(D.asof);const ms=utc(D.mstart);dim=new Date(Date.UTC(ms.getUTCFullYear(),ms.getUTCMonth()+1,0)).getUTCDate();
  elapsed=asof<ms?0:(asof>new Date(Date.UTC(ms.getUTCFullYear(),ms.getUTCMonth()+1,0))?dim:asof.getUTCDate());
+ /* working days: Sundays (and any dates in window.VION_HOLIDAYS) are off; pro-rata, run-rate and pace use working days */
+ {const hol=new Set((window.VION_HOLIDAYS||[]).map(String));wdc=[0];for(let d=1;d<=dim;d++){const dt=new Date(Date.UTC(ms.getUTCFullYear(),ms.getUTCMonth(),d)),iso=dt.toISOString().slice(0,10);wdc.push(wdc[d-1]+((dt.getUTCDay()===0||hol.has(iso))?0:1))}dimW=wdc[dim]||dim;elW=wdc[Math.min(elapsed,dim)];if(elapsed>0&&elW===0)elW=1}
  const mk=D.mstart.slice(0,7);cur=D.mkeys.indexOf(mk);if(cur<0)cur=D.mkeys.length-1;
  const tot=D.mkeys.map((_,i)=>D.dist.reduce((a,d)=>a+d.m[i],0));first=Math.max(0,tot.findIndex(x=>x>0));
  ASMS=D.asms&&D.asms.length?D.asms:[...new Set(D.dist.map(d=>d.asm).filter(Boolean))];GST=1+(D.gst||0.18);
  age=Math.max(0,Math.floor((Date.now()-asof.getTime())/DAY)-0);
  const pal=['--a1','--a2','--a3','--blue'];ASMC={};ASMS.forEach((a,i)=>ASMC[a]=cvar(pal[i%4])||'#0FA3BF');
 }
-const using=(Dx,fn)=>{const s=[D,asof,cur,first,dim,elapsed,ASMS,age,GST];D=Dx;try{derive();return fn()}finally{[D,asof,cur,first,dim,elapsed,ASMS,age,GST]=s}};
+const using=(Dx,fn)=>{const s=[D,asof,cur,first,dim,elapsed,dimW,elW,wdc,ASMS,age,GST];D=Dx;try{derive();return fn()}finally{[D,asof,cur,first,dim,elapsed,dimW,elW,wdc,ASMS,age,GST]=s}};
 /* ===== xlsx parsing (same schema as the embedded data) ===== */
 /* ---- trust boundary: everything from an upload or browser storage passes through here ---- */
 const BADK=k=>k==='__proto__'||k==='constructor'||k==='prototype';
@@ -639,19 +641,19 @@ function M(L,txs){
  const T=sum(L.map(d=>d.tgt)),A=sum(L.map(d=>d.ach)),N=sum(L.map(d=>d.nsv));
  const mon=D.mkeys.map((_,i)=>sum(L.map(d=>d.m[i])));
  const coded=L.filter(d=>d.hasCode!==false&&d.code),act=coded.filter(d=>{const s=days(d.last);return s!==null&&s<=30});
- const left=dim-elapsed,mu=elapsed?A/elapsed:0,projN=elapsed?N/elapsed*dim:0;
+ const left=dim-elapsed,leftW=Math.max(0,dimW-elW),mu=elW?A/elW:0,projN=elW?N/elW*dimW:0;
  // daily series (incl GST, ₹ L) for the target month
  const msKey=D.mstart.slice(0,7),daily=Array(dim).fill(0);
  txs.forEach(t=>{if(t.d.slice(0,7)===msKey){const dd=+t.d.slice(8,10);if(dd>=1&&dd<=dim)daily[dd-1]+=t.n*GST/1e5}});
- const ser=daily.slice(0,elapsed),mean=ser.length?sum(ser)/ser.length:0,sd=ser.length>1?Math.sqrt(sum(ser.map(x=>(x-mean)**2))/(ser.length-1)):0;
- const end=A+mu*left,sdEnd=sd*Math.sqrt(Math.max(0,left));
+ const ser=daily.slice(0,elapsed).filter((_,i)=>wdc[i+1]>wdc[i]),mean=ser.length?sum(ser)/ser.length:0,sd=ser.length>1?Math.sqrt(sum(ser.map(x=>(x-mean)**2))/(ser.length-1)):0;
+ const end=A+mu*leftW,sdEnd=sd*Math.sqrt(Math.max(0,leftW));
  const P=T<=0?null:A>=T?1:sdEnd>0?clamp(1-Phi((T-end)/sdEnd),0,1):(end>=T?1:0);
  const w1=sum(ser.slice(-7))/Math.max(1,Math.min(7,ser.length)),w0=ser.length>7?sum(ser.slice(-14,-7))/Math.max(1,Math.min(7,ser.length-7)):null;
  const full=mon.slice(first,cur),g=full.length>=2&&full[full.length-2]>0?full[full.length-1]/full[full.length-2]-1:null;
  const tot=coded.map(d=>sum(d.m)).sort((a,b)=>b-a),tt0=sum(tot)||1,pos=tot.filter(x=>x>0);
  const k=Math.max(1,Math.ceil(pos.length*.2));let cum=0,n80=0;for(const x of pos){cum+=x;n80++;if(cum/tt0>=.8)break}
- return {T,A,N,all:sum(mon),mon,coded,act,left,mu,projN,daily,sd,end,sdEnd,P,w1,w0,g,top20:sum(pos.slice(0,k))/tt0,k,n80,nAct:pos.length,pace:left>0?Math.max(0,T-A)/left:0,ach:T>0?A/T:0,
-  lo:A+Math.max(0,mu*left-sdEnd),hi:A+mu*left+sdEnd,pi:T>0&&elapsed?(A/T)/(elapsed/dim):0}
+ return {T,A,N,all:sum(mon),mon,coded,act,left,leftW,mu,projN,daily,sd,end,sdEnd,P,w1,w0,g,top20:sum(pos.slice(0,k))/tt0,k,n80,nAct:pos.length,pace:leftW>0?Math.max(0,T-A)/leftW:0,ach:T>0?A/T:0,
+  lo:A+Math.max(0,mu*leftW-sdEnd),hi:A+mu*leftW+sdEnd,pi:T>0&&elW?(A/T)/(elW/dimW):0}
 }
 
 const pP=p=>p===null||p===undefined?'–':p<.01?'<1%':p>.99?'>99%':Math.round(p*100)+'%';
@@ -671,7 +673,7 @@ function getRisks(x){
  const never=L.filter(d=>d.code&&!d.last),nt=L.filter(d=>d.tgt===0&&d.ach>0);
  if(m.T>0&&elapsed>0&&(m.P===null||m.P<.5)){const gap=Math.max(0,m.T-m.A);
   r.push({id:'fc',sev:m.P<.15?3:2,title:tt('Target at risk','लक्ष्य खतरे में'),
-   why:tt(`${nmScope()} ${scope==='All'?'are':'is'} at ${pct(m.ach)} of target with ${elapsed} of ${dim} days gone. Daily run-rate is ₹${f2(m.mu)} L against ₹${f2(m.pace)} L needed.`,`${nmScope()} ने ${elapsed}/${dim} दिन में लक्ष्य का ${pct(m.ach)} पूरा किया। रोज़ की रफ़्तार ₹${f2(m.mu)} L है, जबकि ₹${f2(m.pace)} L चाहिए।`),
+   why:tt(`${nmScope()} ${scope==='All'?'are':'is'} at ${pct(m.ach)} of target with ${elW} of ${dimW} working days gone. Daily run-rate is ₹${f2(m.mu)} L against ₹${f2(m.pace)} L needed.`,`${nmScope()} ने ${elW}/${dimW} कार्य-दिवस में लक्ष्य का ${pct(m.ach)} पूरा किया। रोज़ की रफ़्तार ₹${f2(m.mu)} L है, जबकि ₹${f2(m.pace)} L चाहिए।`),
    next:tt(`Month-end lands near ${L_(m.end)} (${pct(m.end/m.T)} of target).`,`महीने के अंत में लगभग ${L_(m.end)} (लक्ष्य का ${pct(m.end/m.T)}) रहेगा।`),
    impact:gap,prob:(1-(m.P||0))*100,urg:m.left,act:tt(`Fix daily billing: ask each ASM for a committed order list for the next ${m.left} days.`,`रोज़ की बिलिंग सुधारें: हर ASM से अगले ${m.left} दिन की पक्की ऑर्डर सूची लें।`)})}
  if(age>3)r.push({id:'stale',sev:age>7?3:2,title:tt(`Data is ${age} days old`,`डेटा ${age} दिन पुराना है`),why:tt(`The last invoice in the file is ${fmtD(D.asof)}. Every figure is as of that date.`,`फ़ाइल में आख़िरी इनवॉइस ${fmtD(D.asof)} का है। सभी आँकड़े उसी तारीख़ तक के हैं।`),next:tt('Decisions made now rest on old numbers.','अभी के फ़ैसले पुराने आँकड़ों पर टिके होंगे।'),impact:null,prob:100,urg:0,act:tt('Load the latest workbook with “Load workbook” above.','ऊपर “वर्कबुक लोड करें” से नई फ़ाइल लोड करें।')});
@@ -742,7 +744,7 @@ function getBench(x){
  if(i>=2&&mo[i-2]>0)b.push({k:tt('Last full month vs the month before','पिछला पूरा महीना बनाम उससे पहले'),a:mo[i-1],b:mo[i-2],u:'₹ L'});
  if(i>=1&&mo[i-1]>0&&elapsed>0)b.push({k:tt('This month projected vs last full month','इस महीने का अनुमान बनाम पिछला महीना'),a:m.projN,b:mo[i-1],u:'₹ L'});
  if(i>=6){const q1=sum(mo.slice(i-3,i)),q0=sum(mo.slice(i-6,i-3));if(q0>0)b.push({k:tt('Last 3 months vs the 3 before','पिछले 3 महीने बनाम उससे पहले के 3'),a:q1,b:q0,u:'₹ L'})}
- if(m.T>0)b.push({k:tt('Achieved vs strategic target (month to date)','हासिल बनाम रणनीतिक लक्ष्य (अब तक)'),a:m.A,b:m.T*(elapsed/dim),u:'₹ L',note:tt('target pro-rated to today','लक्ष्य आज तक के अनुपात में')});
+ if(m.T>0)b.push({k:tt('Achieved vs strategic target (month to date)','हासिल बनाम रणनीतिक लक्ष्य (अब तक)'),a:m.A,b:m.T*(elW/dimW),u:'₹ L',note:tt('target pro-rated to today','लक्ष्य आज तक के अनुपात में')});
  return b;
 }
 function getChanges(x){
@@ -903,7 +905,7 @@ function heroHTML(x){
  let head,legend,tiles;
  if(!hist){
   const st=m.T>0?paceSt(m.pi):[tt('No target','लक्ष्य नहीं'),'लक्ष्य नहीं',C.mut];
-  head=`<div class="eyebrow">${tt('Target race','लक्ष्य की दौड़')} · ${esc(mName(cur))} · ${esc(nmScope())}</div><h2 style="font-size:20px;color:var(--hi);margin-top:6px">${m.T>0?tt(`Month-end lands near ${L_(m.end)} against a ${L_(m.T)} target`,`महीना ${L_(m.T)} लक्ष्य के सामने लगभग ${L_(m.end)} पर ख़त्म होगा`):tt('No target is set for this view','इस व्यू के लिए लक्ष्य नहीं है')}</h2><div class="ln"><span class="pill" style="--c:${st[2]}">${typeof st[i]==='string'?st[i]:st[0]}</span><span>${tt('Day','दिन')} ${elapsed} ${tt('of','में से')} ${dim} · ${tt('at','अभी')} ${pct(m.ach)} · ${tt('should be at','होना चाहिए')} ${pct(elapsed/dim)}</span></div>`;
+  head=`<div class="eyebrow">${tt('Target race','लक्ष्य की दौड़')} · ${esc(mName(cur))} · ${esc(nmScope())}</div><h2 style="font-size:20px;color:var(--hi);margin-top:6px">${m.T>0?tt(`Month-end lands near ${L_(m.end)} against a ${L_(m.T)} target`,`महीना ${L_(m.T)} लक्ष्य के सामने लगभग ${L_(m.end)} पर ख़त्म होगा`):tt('No target is set for this view','इस व्यू के लिए लक्ष्य नहीं है')}</h2><div class="ln"><span class="pill" style="--c:${st[2]}">${typeof st[i]==='string'?st[i]:st[0]}</span><span>${tt('Working day','कार्य-दिवस')} ${elW} ${tt('of','में से')} ${dimW} · ${tt('at','अभी')} ${pct(m.ach)} · ${tt('should be at','होना चाहिए')} ${pct(elW/dimW)}</span></div>`;
   legend=`<div class="lgd"><span><i style="--c:${C.cyan}"></i>${tt('Billed so far','अब तक बिल')}</span><span><i style="--c:${C.mut}"></i>${tt('Even pace to target','लक्ष्य की समान रफ़्तार')}</span><span><i class="dsh" style="--c:${C.purple}"></i>${tt('Forecast','पूर्वानुमान')}</span><span><i class="area" style="--c:${C.purple}"></i>${tt('Likely range','संभावित दायरा')}</span><span><i class="dot2" style="--c:${C.orange}"></i>${tt('Needed from today','आज से ज़रूरी')}</span></div>`;
   const rng=m.T>0?Math.max(m.T,m.hi):Math.max(m.hi,.01),A=x.L.filter(d=>d.code),ac=A.filter(d=>stDays(d)==='active'),si=A.filter(d=>stDays(d)==='silent'),nv=A.filter(d=>stDays(d)==='never');
   const ratio=m.mu>0?m.pace/m.mu:null,nmx=Math.max(m.pace,m.mu,.0001);
@@ -942,7 +944,7 @@ function asmRaceHTML(x){
  const i=lang==='hi'?1:0;
  if(x.hist){const tot=sum(x.lead.map(z=>sum(z.l.map(periodVal))))||1,rows=x.lead.map(z=>({z,v:sum(z.l.map(periodVal))})).sort((a,b)=>b.v-a.v);
   return `<div class="arace">${rows.map(r=>`<div class="ar"><div class="ah"><div class="an"><i style="--c:${ASMC[r.z.a]}"></i><b>${esc(r.z.a)}</b></div><div class="av">${L_(r.v)}</div></div><div class="trk"><div class="fl" style="--c:${ASMC[r.z.a]}" data-w="${(r.v/tot*100).toFixed(1)}"></div></div><div class="ad"><span>${pct(r.v/tot)} ${tt('of the period','अवधि का')}</span><span>${r.z.l.filter(d=>d.code&&periodVal(d)>0).length} ${tt('billing','बिल करने वाले')}</span></div></div>`).join('')}</div>`}
- const exp=elapsed/dim;
+ const exp=elW/dimW;
  return `<div class="arace">${x.lead.map(z=>{const st=z.m.T>0?paceSt(z.m.pi):[tt('No target','लक्ष्य नहीं'),'लक्ष्य नहीं',C.mut];return `<div class="ar"><div class="ah"><div class="an"><i style="--c:${ASMC[z.a]}"></i><b>${esc(z.a)}</b><span class="pill" style="--c:${st[2]}">${st[i]}</span></div><div class="av">${pct(z.m.ach)}</div></div><div class="trk" title="${esc(z.a)}: ${pct(z.m.ach)} · ${tt('should be','होना चाहिए')} ${pct(exp)}"><div class="fl" style="--c:${ASMC[z.a]}" data-w="${clamp(z.m.ach*100).toFixed(1)}"></div><div class="pm" style="left:calc(${(exp*100).toFixed(1)}% - 1px)"></div></div><div class="ad"><span>${L_(z.m.A)} ${tt('of','में से')} ${L_(z.m.T)}</span><span>${z.m.left>0&&z.m.T>0?tt('needs','चाहिए')+' '+L_(z.m.pace)+tt('/day','/दिन'):''}</span></div></div>`}).join('')}</div><div class="akey"><span><i></i>${tt('Where each ASM should be today','आज तक हर ASM कहाँ होना चाहिए')} (${pct(exp)})</span></div>`;
 }
 function gapHTML(x){
@@ -1161,8 +1163,8 @@ function drawRace(x,id='cRace',big=false){
  const el=$(id);if(!el)return;const m=x.m,n=dim,lab=Array.from({length:n+1},(_,i)=>i);
  const cum=[0];let a=0;for(let i=0;i<n;i++){if(i<elapsed){a+=m.daily[i];cum.push(a)}else cum.push(null)}
  const k=a>0&&Math.abs(m.A/a-1)<.05?m.A/a:1;for(let i=0;i<=n;i++)if(cum[i]!==null)cum[i]*=k;
- const T=m.T,from=d=>d<elapsed?null:d-elapsed,fc=lab.map(d=>from(d)===null?null:m.A+m.mu*from(d)),lo=lab.map(d=>from(d)===null?null:m.A+Math.max(0,m.mu*from(d)-m.sd*Math.sqrt(from(d)))),hi=lab.map(d=>from(d)===null?null:m.A+m.mu*from(d)+m.sd*Math.sqrt(from(d)));
- const plan=lab.map(d=>T>0?T*d/n:null),need=lab.map(d=>T>0&&from(d)!==null&&n>elapsed?m.A+(T-m.A)*from(d)/(n-elapsed):null);
+ const T=m.T,from=d=>d<elapsed?null:wdc[d]-elW,fc=lab.map(d=>from(d)===null?null:m.A+m.mu*from(d)),lo=lab.map(d=>from(d)===null?null:m.A+Math.max(0,m.mu*from(d)-m.sd*Math.sqrt(from(d)))),hi=lab.map(d=>from(d)===null?null:m.A+m.mu*from(d)+m.sd*Math.sqrt(from(d)));
+ const plan=lab.map(d=>T>0?T*wdc[d]/dimW:null),need=lab.map(d=>T>0&&from(d)!==null&&dimW>elW?m.A+(T-m.A)*from(d)/(dimW-elW):null);
  const ctx=el.getContext('2d'),gr=ctx.createLinearGradient(0,0,0,big?520:300);gr.addColorStop(0,alpha(C.cyan,.26));gr.addColorStop(1,alpha(C.cyan,0));
  const ymax=niceMax(Math.max(T,hi[n]||0,m.A)*1.05),fs=big?14:12;
  mk(id,{type:'line',data:{labels:lab,datasets:[
@@ -1212,7 +1214,7 @@ function afterRender(x){
  // hero
  if(x.hist)drawMonthView(x);else drawRace(x);
  ['gH','gR'].forEach(animGauge);counter($('gHn'),x.health.score,v=>Math.round(v));counter($('gRn'),x.health.ready,v=>Math.round(v));
- if(!x.hist){counter($('tA'),m.A,L_);counter($('tF'),m.end,L_);if(m.left>0)counter($('tN'),m.pace,L_)}else counter($('tA'),sum(x.L.map(periodVal)),L_);
+ if(!x.hist){counter($('tA'),m.A,L_);counter($('tF'),m.end,L_);if(m.leftW>0)counter($('tN'),m.pace,L_)}else counter($('tA'),sum(x.L.map(periodVal)),L_);
  animBars();
  (x.K||[]).forEach((k,i)=>{if(k.sp)sparkCanvas($('ks'+i),k.sp,C.cyan)});
  drawGap(x);
@@ -1296,7 +1298,7 @@ function simulator(x){
  const silent=x.L.filter(d=>d.code&&d.last&&days(d.last)>=30&&avg3(d)>0),ub=x.L.filter(d=>d.tgt>0&&d.ach===0&&avg3(d)>0),impS=sum(silent.map(d=>avg3(d)*GST)),impU=sum(ub.map(d=>Math.min(d.tgt,avg3(d)*GST)));
  const run=()=>{const k=+$('s1').value/100,r2=+$('s2').value/100,r3=+$('s3').value/100,am=$('s4').value,mg=parseFloat($('s5').value);
   $('v1').textContent=Math.round(k*100)+'%';$('v2').textContent=Math.round(r2*100)+'%';$('v3').textContent=Math.round(r3*100)+'%';
-  let end=m.A+m.mu*k*m.left+r2*impS*(m.left/dim)+r3*impU*(m.left/dim);
+  let end=m.A+m.mu*k*m.leftW+r2*impS*(m.leftW/dimW)+r3*impU*(m.leftW/dimW);
   if(am){const l=X.lead.find(z=>z.a===am);if(l&&(scope==='All'||scope===am))end-=(l.m.mu*k*m.left)}
   const P=m.T<=0?null:m.sdEnd>0?clamp(1-Phi((m.T-end)/m.sdEnd),0,1):(end>=m.T?1:0),dEnd=end-m.end,pr=m.T?end/m.T:0,mx=Math.max(m.T,end,m.end)*1.05||1;
   $('bul').innerHTML=`<div class="eyebrow" style="margin-bottom:8px">${tt('Month-end: today\'s pace vs this scenario vs target','माह-अंत: मौजूदा रफ़्तार बनाम यह परिदृश्य बनाम लक्ष्य')}</div><div class="bt"><i style="--c:${alpha(C.mut,.7)};width:${(m.end/mx*100).toFixed(1)}%;top:5px;bottom:15px"></i><i style="--c:${C.cyan};width:${(Math.max(0,end)/mx*100).toFixed(1)}%;top:15px;bottom:5px"></i>${m.T>0?`<em style="left:${(m.T/mx*100).toFixed(1)}%"></em>`:''}</div><div class="bk"><span><i style="--c:${alpha(C.mut,.7)}"></i>${tt('Today\'s pace','मौजूदा रफ़्तार')} ${L_(m.end)}</span><span><i style="--c:${C.cyan}"></i>${tt('Scenario','परिदृश्य')} ${L_(end)}</span>${m.T>0?`<span><i style="--c:var(--hi);width:2px;height:12px"></i>${tt('Target','लक्ष्य')} ${L_(m.T)}</span>`:''}</div>`;
@@ -1440,7 +1442,7 @@ Object.assign(IC,{
 Object.assign(PGOF,{'s-sch':'score','s-sck':'score','s-sca':'score','s-scb':'score','s-sct':'score','s-scx':'score'});
 let scFilter='all',scAll=false;
 
-const scSt=(T,A)=>{if(!(T>0))return {k:'nt',e:'NO TARGET',h:'लक्ष्य नहीं',c:C.mut};const r=(A/T)/Math.max(elapsed/dim,.01);
+const scSt=(T,A)=>{if(!(T>0))return {k:'nt',e:'NO TARGET',h:'लक्ष्य नहीं',c:C.mut};const r=(A/T)/Math.max(elW/dimW,.01);
  return A>=T?{k:'ok',e:'ACHIEVED',h:'हासिल',c:C.green}:r>=1?{k:'ok',e:'ON TRACK',h:'सही रफ़्तार',c:C.green}:r>=.5?{k:'warn',e:'BEHIND',h:'पीछे',c:C.orange}:{k:'bad',e:'CRITICAL',h:'गंभीर',c:C.red}};
 const scBadge=s=>`<span class="scb" style="--c:${s.c}">${tt(s.e,s.h)}</span>`;
 function spk(arr,col,w=104,h=30,area=true){
@@ -1450,7 +1452,7 @@ function spk(arr,col,w=104,h=30,area=true){
  return `<svg class="spk" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true">${area?`<path d="${d} L${last[0].toFixed(1)} ${h-1} L${P[0][0].toFixed(1)} ${h-1}Z" fill="${col}" opacity=".12"/>`:''}<path d="${d}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${P[hi][0].toFixed(1)}" cy="${P[hi][1].toFixed(1)}" r="2.4" fill="var(--gold)"/><circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.6" fill="${col}"/></svg>`;
 }
 function scData(x){
- const m=x.m,pace=elapsed/dim,coded=x.L.filter(d=>d.code),mons=D.mkeys.map((_,i)=>i).filter(i=>i>=first&&i<=cur).slice(-6);
+ const m=x.m,pace=elW/dimW,coded=x.L.filter(d=>d.code),mons=D.mkeys.map((_,i)=>i).filter(i=>i>=first&&i<=cur).slice(-6);
  const T=m.T,A=m.A,st=scSt(T,A);
  const billed=coded.filter(d=>d.ach>0),fy=coded.filter(d=>sum(d.m)>0),never=coded.filter(d=>!d.last),silent=coded.filter(d=>d.last&&days(d.last)>=30);
  const onp=coded.filter(d=>d.tgt>0&&d.ach/d.tgt>=pace);
@@ -1568,7 +1570,7 @@ Object.assign(IC,{psales:'<rect x="3" y="4" width="18" height="16" rx="2.5"/><pa
 let psStat='all';
 const PSC={gold:'#F5C518',pink:'#E8798C',maroon:'#9E1B32',peach:'#F4B183',rust:'#B5531E',ink:'#1E2633',grey:'#C9CED6'};
 function psData(x){
- const m=x.m,coded=x.L.filter(d=>d.code),pace=elapsed/dim;
+ const m=x.m,coded=x.L.filter(d=>d.code),pace=elW/dimW;
  const asms=(scope==='All'?ASMS:[scope]).map(a=>{const l=x.L.filter(d=>d.asm===a);const t=sum(l.map(d=>d.tgt)),b=sum(l.map(d=>d.ach));return {a,t,b,r:t>0?b/t:0}});
  const mons=D.mkeys.map((_,i)=>i).filter(i=>i>=first&&i<=cur);
  const mon=mons.map(i=>sum(x.L.map(d=>d.m[i])));
@@ -2600,7 +2602,7 @@ try{if(!PAGES.some(z=>z[0]==='cat')){const i=PAGES.findIndex(z=>z[0]==='prods');
 `;document.head.appendChild(st)}
 const NUM=new Proxy({},{get:(_,k)=>{const i=PAGES.findIndex(z=>z[0]===k);return i<0?'':String(i+1).padStart(2,'0')}});
 const lakh=v=>f2(v);
-const PR=()=>(typeof elapsed==='number'&&typeof dim==='number'&&elapsed>0&&dim>0)?Math.min(1,elapsed/dim):1;
+const PR=()=>(typeof elapsed==='number'&&typeof dim==='number'&&elapsed>0&&dim>0)?Math.min(1,elW/dimW):1;
 const pcol=r=>r>=1?C.green:r>=.5?C.orange:C.red;
 const pill=(r)=>`<span class="rvp" style="background:${pcol(r)}">${Math.round(r*100)}%</span>`;
 const pIdx=()=>per==='T'||per==='ALL'?cur:+per;
@@ -2634,7 +2636,7 @@ function empBody(S){
  const cards=R.map(r=>{const p=r.T>0?r.ach/(r.T*f):0,c=showP?pcol(p):ASMC[r.a],share=tot.nsv>0?r.nsv/tot.nsv:0;
   return `<div style="--c:${c}"><b>${esc(r.a)}<em>${showP?Math.round(p*100)+'% '+tt('achieved','हासिल'):'₹'+lakh(r.nsv)+' L'}</em></b><p>${tt(`NSV ex-GST ₹${lakh(r.nsv)} L · ${Math.round(share*100)}% of the team · ${r.billed} of ${r.codes} distributors billed · ${f0(r.units)} units.`,`NSV (GST के बिना) ₹${lakh(r.nsv)} L · टीम का ${Math.round(share*100)}% · ${r.codes} में से ${r.billed} डिस्ट्रीब्यूटर बिल · ${f0(r.units)} यूनिट।`)}</p></div>`}).join('');
  const k=`<div class="rvk">${tile(tt('Team NSV ex-GST','टीम NSV (GST के बिना)'),'₹'+lakh(tot.nsv)+' L',perLbl(),C.cyan)}${tile(tt('Bill value incl. GST','कुल बिल (GST सहित)'),'₹'+lakh(tot.gross)+' L',tt('invoice value','इनवॉइस मूल्य'),C.blue)}${showP?tile(tt('Pro-rata target','प्रो-राटा लक्ष्य'),'₹'+lakh(tot.T*f)+' L',pct(tp)+tt(' achieved · ',' हासिल · ')+Math.round(f*100)+tt('% of month gone','% माह बीता'),pcol(tp)):tile(tt('Employees','कर्मचारी'),R.length,'ASM',C.purple)}${tile(tt('Units','यूनिट'),f0(tot.units),tt(`${tot.billed} distributors billed`,`${tot.billed} डिस्ट्रीब्यूटर बिल`),C.orange)}</div>`;
- return k+`<div class="rvt"><table>${th}${body}${trow}</table></div><div class="rvc">${cards}</div><div class="rvn">${tt('NSV = net sales value excluding GST (from invoice lines). Pro-rata target = month target × days elapsed ÷ days in month; Ach % = invoice value ÷ pro-rata target, on the same basis as the rest of this dashboard.','NSV = GST के बिना नेट सेल्स वैल्यू (इनवॉइस लाइन से)। प्रो-राटा लक्ष्य = माह लक्ष्य × बीते दिन ÷ माह के दिन; Ach % = इनवॉइस मूल्य ÷ प्रो-राटा लक्ष्य।')}</div>`;
+ return k+`<div class="rvt"><table>${th}${body}${trow}</table></div><div class="rvc">${cards}</div><div class="rvn">${tt('NSV = net sales value excluding GST (from invoice lines). Pro-rata target = month target × working days elapsed ÷ working days in month (Sundays excluded); Ach % = invoice value ÷ pro-rata target, on the same basis as the rest of this dashboard.','NSV = GST के बिना नेट सेल्स वैल्यू (इनवॉइस लाइन से)। प्रो-राटा लक्ष्य = माह लक्ष्य × बीते दिन ÷ माह के दिन; Ach % = इनवॉइस मूल्य ÷ प्रो-राटा लक्ष्य।')}</div>`;
 }
 
 /* ---- distributor wise (Primary Sales) ---- */
@@ -2649,7 +2651,7 @@ function distBody(S){
  const trow=`<tr class="tot"><td class="l"></td><td class="l">${tt('Total','कुल')}</td><td></td>${showP?`<td>${lakh(tg)}</td><td>${lakh(tg*f)}</td>`:''}<td>${lakh(N)}</td><td>${lakh(TG)}</td><td>${lakh(T)}</td>${showP?`<td>${tg>0?pill(sum(rows.map(r=>r.d.ach))/(tg*f)):'–'}</td>`:''}<td>${sum(rows.map(r=>r.i))}</td></tr>`;
  const billed=rows.filter(r=>r.g>0).length;
  const k=`<div class="rvk">${tile(tt('Total bill value incl. GST','कुल बिल मूल्य (GST सहित)'),'₹'+lakh(T)+' L',perLbl(),C.blue)}${tile(tt('NSV ex-GST','NSV (GST के बिना)'),'₹'+lakh(N)+' L','',C.cyan)}${tile(tt('GST collected on bills','बिलों पर GST'),'₹'+lakh(TG)+' L',tt(`at ${Math.round((GST-1)*100)}%`,`${Math.round((GST-1)*100)}% पर`),C.orange)}${tile(tt('Distributors billed','बिल किए डिस्ट्रीब्यूटर'),billed,tt(`of ${L.length} on the list`,`सूची के ${L.length} में से`),C.green)}</div>`;
- return k+`<div class="rvt rvscr"><table>${th}${body}${trow}</table></div><div class="rvn">${tt('Total bill value = invoice value including GST. Pro-rata target = month target × days elapsed ÷ days in month; Ach % = invoice value ÷ pro-rata target. Distributors with no bill in the period show 0.','कुल बिल मूल्य = GST सहित इनवॉइस मूल्य। प्रो-राटा लक्ष्य = माह लक्ष्य × बीते दिन ÷ माह के दिन; Ach % = इनवॉइस मूल्य ÷ प्रो-राटा लक्ष्य। जिन डिस्ट्रीब्यूटर का बिल नहीं बना, वे 0 दिखते हैं।')}</div>`;
+ return k+`<div class="rvt rvscr"><table>${th}${body}${trow}</table></div><div class="rvn">${tt('Total bill value = invoice value including GST. Pro-rata target = month target × working days elapsed ÷ working days in month (Sundays excluded); Ach % = invoice value ÷ pro-rata target. Distributors with no bill in the period show 0.','कुल बिल मूल्य = GST सहित इनवॉइस मूल्य। प्रो-राटा लक्ष्य = माह लक्ष्य × बीते दिन ÷ माह के दिन; Ach % = इनवॉइस मूल्य ÷ प्रो-राटा लक्ष्य। जिन डिस्ट्रीब्यूटर का बिल नहीं बना, वे 0 दिखते हैं।')}</div>`;
 }
 
 /* ---- JCP (visits) ---- */
@@ -2978,7 +2980,7 @@ const head=(pg,t,s,nn)=>`<div class="rvh">${nn===false?'':`<span class="n">${Str
 const shell=(pg,t,s,b,nn)=>`<section class="sec rvs p18" id="s-${pg}" data-pg="${pg}">${head(pg,t,s,nn)}${b}</section>`;
 const tile=(k,v,s,c)=>`<div style="--c:${c||C.cyan}"><div class="k">${k}</div><div class="v">${v}</div>${s?`<div class="s">${s}</div>`:''}</div>`;
 const mon=i=>D.months[i]||'';
-const f=()=>(typeof elapsed==='number'&&typeof dim==='number'&&elapsed>0&&dim>0)?Math.min(1,elapsed/dim):1;
+const f=()=>(typeof elapsed==='number'&&typeof dim==='number'&&elapsed>0&&dim>0)?Math.min(1,elW/dimW):1;
 
 /* ---------- plan vs achievement strip ---------- */
 function stripBody(){
@@ -3265,7 +3267,7 @@ function spark(a){
 function tiles(){
  const main=document.getElementById('main');if(!main||!D||!D.dist)return;
  main.querySelectorAll('.spk,.tar').forEach(e=>e.remove());main.querySelectorAll('.has-spk').forEach(e=>e.classList.remove('has-spk'));
- const frac=(typeof elapsed==='number'&&typeof dim==='number'&&elapsed>0&&dim>0)?Math.min(1,elapsed/dim):1;
+ const frac=(typeof elapsed==='number'&&typeof dim==='number'&&elapsed>0&&dim>0)?Math.min(1,elW/dimW):1;
  main.querySelectorAll('.rvk>div').forEach(t=>{
   if(t.offsetWidth<175&&t.offsetWidth>0)return;
   const k=t.querySelector('.k');if(!k)return;const kind=kindOf(k.textContent.trim().toLowerCase());if(!kind)return;
@@ -3843,7 +3845,7 @@ function jvNums(){const x=X,m=x.m,tot=D.mkeys.map((_,i)=>D.dist.reduce((a,d)=>a+
  const asm=ASMS.map(a=>{const L=D.dist.filter(d=>d.code&&d.asm===a),T=jvSum(L.map(d=>+d.tgt||0)),A=jvSum(L.map(d=>+d.ach||0));return {name:a,T,A,pct:T>0?A/T:0,n:L.length,billed:L.filter(d=>(+d.ach||0)>.006).length}});
  const add=jvSum(unb.slice(0,3).map(d=>d.tgt*.5)),best=Math.max(m.hi,m.end+add),likely=m.end,risk=m.lo;
  const r30=m.mu*30,r90a=m.mu*91,r90b=avg3*3,r12a=m.mu*365,r12b=avg3*12;
- const crit=x.crit,ratio=m.T>0&&elapsed>0?m.ach/(elapsed/dim):0,rk=ratio<.5||crit>=3?'high':ratio<.85||crit>=1?'med':'low';
+ const crit=x.crit,ratio=m.T>0&&elapsed>0?m.ach/(elW/dimW):0,rk=ratio<.5||crit>=3?'high':ratio<.85||crit>=1?'med':'low';
  return {x,m,tot,prev,avg3,unb,asm,add,best,likely,risk,r30,r90:[Math.min(r90a,r90b),Math.max(r90a,r90b)],r12:[Math.min(r12a,r12b),Math.max(r12a,r12b)],growNow:m.g,growFc:prev>0?m.end/prev-1:null,conf:confOf(x),rk,ratio,add3:unb.slice(0,3)}}
 /* ---------- real headlines: a dated snapshot fetched from the web when this build was made (the page itself cannot browse) ---------- */
 const JV_SNAP='2026-10-31';
@@ -3858,7 +3860,7 @@ const jvUrl=u=>/^https:\/\/[a-z0-9.-]+\/[\w\-./%?=&~+#:]*$/i.test(u)?u:'';
 function jvNewsList(kinds,max){return JV_NEWS.filter(n=>!kinds||kinds.includes(n.k)).slice(0,max||9).map(n=>`<li class="jnw"><a href="${esc(jvUrl(n.u))}" target="_blank" rel="noopener noreferrer">${esc(n.t)}</a><small>${esc(n.src)} · ${esc(n.date)} · ${tt('reliability: not rated','भरोसेमंदी: रेट नहीं')}</small>${n.s?`<p>${esc(n.s)}</p>`:`<p class="jnote">${tt('Headline only; I have not read the article.','सिर्फ़ सुर्ख़ी; मैंने लेख नहीं पढ़ा।')}</p>`}</li>`).join('')}
 const jvPct=v=>(v*100).toFixed(1)+'%',jvSign=v=>(v>=0?'+':'')+(v*100).toFixed(1)+'%';
 function jvSnapshot(){const n=jvNums(),m=n.m;const r=v=>Math.round(v*100)/100;
- return JSON.stringify({dataUpTo:D.asof,month:D.months[cur],daysElapsed:elapsed,daysInMonth:dim,unit:'INR lakh incl GST',scope:scope,targetL:r(m.T),achievedL:r(m.A),pctOfTarget:r(m.ach*100),runRatePerDayL:r(m.mu),monthEndForecastL:r(m.end),forecastRangeL:[r(m.lo),r(m.hi)],neededPerDayL:r(m.pace),chanceOfHittingTargetPct:r((m.P||0)*100),
+ return JSON.stringify({dataUpTo:D.asof,month:D.months[cur],daysElapsed:elapsed,daysInMonth:dim,workingDaysElapsed:elW,workingDaysInMonth:dimW,unit:'INR lakh incl GST',scope:scope,targetL:r(m.T),achievedL:r(m.A),pctOfTarget:r(m.ach*100),runRatePerDayL:r(m.mu),monthEndForecastL:r(m.end),forecastRangeL:[r(m.lo),r(m.hi)],neededPerDayL:r(m.pace),chanceOfHittingTargetPct:r((m.P||0)*100),
   asm:n.asm.map(a=>({name:a.name,targetL:r(a.T),achievedL:r(a.A),pct:r(a.pct*100),distributors:a.n,billed:a.billed})),topUnbilledTargets:n.unb.slice(0,6).map(d=>({name:d.name,asm:d.asm,district:d.dt,targetL:r(d.tgt)})),
   risks:n.x.risks.slice(0,4).map(q=>q.title+' ('+q.why.replace(/<[^>]+>/g,'').slice(0,110)+')'),opportunities:n.x.opps.slice(0,4).map(q=>q.title+' ~'+r(q.impact)+' L'),monthlyNsvL:Object.fromEntries(D.mkeys.map((k,i)=>[D.months[i],r(n.tot[i])]))})}
 /* ---------- local, data-only answers ---------- */
@@ -4013,7 +4015,7 @@ function renderTicker(x){
  const it=[`<span class="${h.score<60?'d':''}">${tt('Health','हेल्थ')} <b>${h.score}/100</b></span>`,`<span>${tt('Achieved','हासिल')} <b>${pct(m.ach)}</b> · ${L_(m.A)} / ${L_(m.T)}</span>`,`<span class="${(m.P||0)>=.5?'u':'d'}">${tt('Chance to hit target','लक्ष्य पाने की संभावना')} <b>${m.P===null?'–':pP(m.P)}</b></span>`,`<span>${tt('Active','सक्रिय')} <b>${m.act.length}/${m.coded.length}</b></span>`,`<span>${tt('Silent','चुप')} <b>${x.silent.length}</b></span>`,x.risks[0]?`<span>${tt('Top risk','शीर्ष जोखिम')}: <b>${esc(x.risks[0].title)}</b></span>`:'',x.opps[0]?`<span>${tt('Top opportunity','शीर्ष अवसर')}: <b>${x.opps[0].title}</b></span>`:'',...inv];
  $('tick').innerHTML=`<div class="t">${it.join('')}</div>`;
 }
-const confOf=x=>{x=x||X;const q=x&&x.qa?x.qa.rate:1;return Math.round(40*(elapsed/dim)+30*clamp(100-age*10)/100+30*q)};
+const confOf=x=>{x=x||X;const q=x&&x.qa?x.qa.rate:1;return Math.round(40*(elW/dimW)+30*clamp(100-age*10)/100+30*q)};
 const JQ=[['brief','Executive brief','एग्ज़ीक्यूटिव ब्रीफ'],['today','Today\'s priorities','आज की प्राथमिकताएँ'],['risks','Top risks','टॉप जोखिम'],['opps','Top opportunities','टॉप अवसर'],['forecast','Forecast','पूर्वानुमान'],['revenue','Revenue','राजस्व'],['anomaly','Unusual movements','असामान्य हलचल'],['actions','Recommended actions','अनुशंसित कार्रवाई'],['conf','AI confidence','AI भरोसा'],['board','Board summary','बोर्ड सारांश']];
 let jkey='brief';
 function jans(key,x){
@@ -4026,7 +4028,7 @@ function jans(key,x){
  case 'revenue':{const top=[...x.L].sort((p,q)=>q.ach-p.ach)[0];return H(tt('Revenue','राजस्व'))+`<p>${tt(`All-month NSV ${L_(m.all)} from ${m.nAct} billing distributors; the top ${m.k} hold ${pct(m.top20)}.`,`${m.nAct} बिलिंग डिस्ट्रीब्यूटर से कुल NSV ${L_(m.all)}; टॉप ${m.k} के पास ${pct(m.top20)}।`)}</p>`+(top&&top.ach>0?`<p>${tt(`${esc(top.name)} leads this month with ${L_(top.ach)}.`,`${esc(top.name)} इस महीने ${L_(top.ach)} के साथ आगे।`)}</p>`:'')+(m.g!==null?`<p>${tt(`Last full month ${(m.g*100>=0?'+':'')+(m.g*100).toFixed(1)}% vs the month before.`,`पिछला पूरा महीना ${(m.g*100>=0?'+':'')+(m.g*100).toFixed(1)}%।`)}</p>`:'')+(m.w0!==null?`<p>${tt(`Last 7 days ${L_(m.w1)}/day vs ${L_(m.w0)}/day before.`,`पिछले 7 दिन ${L_(m.w1)}/दिन, पहले ${L_(m.w0)}/दिन।`)}</p>`:'')+ch({conf:cf});}
  case 'anomaly':return H(tt('Unusual movements','असामान्य हलचल'))+(x.anom.slice(0,3).map(a=>`<p><b>${esc(a.t)}</b> (${tt('signal','सिग्नल')} ${a.s})<br>${a.why}<br>${a.act}</p>`).join('')||tt('No unusual movement found.','कोई असामान्य हलचल नहीं।'))+ch({conf:cf});
  case 'actions':return H(tt('Recommended actions','अनुशंसित कार्रवाई'))+`<ol>${A.slice(0,5).map(a=>`<li>${a.act}<br><small style="color:var(--mut)">${a.own} · ${a.dl}${a.imp?' · '+L_(a.ret):''} · ${a.conf}%</small></li>`).join('')}</ol><div class="jb"><button class="chip" data-gop="act">${tt('Open the action center','एक्शन सेंटर खोलें')}</button></div>`;
- case 'conf':return H(tt('AI confidence','AI भरोसा'))+`<p><b style="font-size:24px">${cf}%</b></p><p>${tt(`40% month elapsed (${Math.round(elapsed/dim*100)}%), 30% data freshness (${Math.round(clamp(100-age*10))}%), 30% data trust (${Math.round(x.qa.rate*100)}%).`,`40% बीता महीना (${Math.round(elapsed/dim*100)}%), 30% डेटा ताज़गी (${Math.round(clamp(100-age*10))}%), 30% डेटा भरोसा (${Math.round(x.qa.rate*100)}%)।`)}</p><p>${tt('Raise it by loading a fresh workbook and clearing the red items in Data QA.','नई वर्कबुक लोड करके और Data QA के लाल आइटम ठीक करके बढ़ाएँ।')}</p><div class="jb"><button class="chip" data-gop="qa">${tt('Open Data QA','Data QA खोलें')}</button></div>`;
+ case 'conf':return H(tt('AI confidence','AI भरोसा'))+`<p><b style="font-size:24px">${cf}%</b></p><p>${tt(`40% month elapsed (${Math.round(elW/dimW*100)}%), 30% data freshness (${Math.round(clamp(100-age*10))}%), 30% data trust (${Math.round(x.qa.rate*100)}%).`,`40% बीता महीना (${Math.round(elW/dimW*100)}%), 30% डेटा ताज़गी (${Math.round(clamp(100-age*10))}%), 30% डेटा भरोसा (${Math.round(x.qa.rate*100)}%)।`)}</p><p>${tt('Raise it by loading a fresh workbook and clearing the red items in Data QA.','नई वर्कबुक लोड करके और Data QA के लाल आइटम ठीक करके बढ़ाएँ।')}</p><div class="jb"><button class="chip" data-gop="qa">${tt('Open Data QA','Data QA खोलें')}</button></div>`;
  case 'board':{const R=x.risks[0],O=x.opps[0];return H(tt('Board summary','बोर्ड सारांश'))+`<p>${tt(`Business health ${h.score}/100 (${h.state[0]}), CEO readiness ${h.ready}/100.`,`बिज़नेस हेल्थ ${h.score}/100 (${h.state[1]}), CEO तैयारी ${h.ready}/100।`)}</p><p>${tt(`${nmScope()} achieved ${pct(m.ach)} of ${L_(m.T)}; month-end near ${L_(m.end)}, ${m.P===null?'':pP(m.P)+' chance of target'}.`,`${nmScope()} ने ${L_(m.T)} का ${pct(m.ach)} हासिल किया; माह-अंत लगभग ${L_(m.end)}।`)}</p>${R?`<p>${tt('Top risk','शीर्ष जोखिम')}: <b>${esc(R.title)}</b></p>`:''}${O?`<p>${tt('Top opportunity','शीर्ष अवसर')}: <b>${O.title}</b></p>`:''}${ch(A[0])}<div class="jb"><button class="chip" data-gop="board">${ic('present')}${tt('Start the slideshow','स्लाइड शो शुरू करें')}</button></div>`;}
  case 'today':return H(tt('Today\'s priorities','आज की प्राथमिकताएँ'))+(A.filter(a=>a.urg<=7&&stOf(a)!=='done').slice(0,4).map(lineA).join('')||tt('Nothing due within 7 days.','7 दिन में कुछ देय नहीं।'));
  default:{const an=answers(x),L=Array.isArray(an[3])?an[3]:[an[3]];return H(tt('Executive brief','एग्ज़ीक्यूटिव ब्रीफ'))+`<p><b>${tt('What is happening','क्या हो रहा है')}.</b> ${an[0]}</p><p><b>${tt('Why','क्यों')}.</b> ${an[1]}</p><p><b>${tt('What happens next','आगे क्या होगा')}.</b> ${an[2]}</p><p><b>${tt('Do this now','अभी यह करें')}:</b></p><ol>${L.map(a=>`<li>${a}</li>`).join('')}</ol>`+ch(A[0])+`<div class="jb"><button class="chip" data-gop="brief">${ic('brief')}${tt('Open full brief','पूरा ब्रीफ खोलें')}</button><button class="chip" data-gop="speak">${ic('speak')}${tt('Read aloud','सुनें')}</button></div>`;}
