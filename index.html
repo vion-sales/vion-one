@@ -2943,7 +2943,7 @@ try{
 }catch(e){console.error('p18 reg',e)}
 
 /* ---------- sidebar groups ---------- */
-const GROUPS=[['perf','Performance','परफॉर्मेंस',['score','psales','bkt','plan','team']],['prod','Products','प्रोडक्ट',['prods','cat']],['mkt','Market','मार्केट',['dists','indmap','custs','acbal','d360','jcp']],['gov','Government','सरकारी',['subs','mnre']],['act','Actions','कार्रवाई',['risk','act','docs']]];
+const GROUPS=[['perf','Performance','परफॉर्मेंस',['score','psales','bkt','plan','team']],['prod','Products','प्रोडक्ट',['prods','cat']],['mkt','Market','मार्केट',['dists','indmap','custs','d360','jcp']],['fin','Finance','फाइनेंस',['acbal','docs']],['gov','Government','सरकारी',['subs','mnre']],['act','Actions','कार्रवाई',['risk','act']]];
 (function reorder(){const rank=id=>{for(let i=0;i<GROUPS.length;i++){const j=GROUPS[i][3].indexOf(id);if(j>=0)return i*100+j}return 900};PAGES.sort((a,b)=>rank(a[0])-rank(b[0]))})();
 function groupTabs(){
  const t=document.getElementById('tabs');if(!t)return;
@@ -3704,7 +3704,7 @@ wr(last);tick();
 /* p29: Account Balance tab (source: Powerhive account-balance sheet) with CSV export */
 (function(){
 IC.acbal='<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/><circle cx="17" cy="15" r="1.2"/>';
-try{if(!PAGES.some(z=>z[0]==='acbal')){const i=PAGES.findIndex(z=>z[0]==='custs');PAGES.splice(i>=0?i+1:PAGES.length,0,['acbal','Account Balance','खाता शेष','acbal']);Object.assign(PGOF,{'s-acbal':'acbal'})}}catch(e){console.error('p29 reg',e)}
+try{if(!PAGES.some(z=>z[0]==='acbal')){const i=PAGES.findIndex(z=>z[0]==='docs');PAGES.splice(i>=0?i:PAGES.length,0,['acbal','Account Balance','खाता शेष','acbal']);Object.assign(PGOF,{'s-acbal':'acbal'})}}catch(e){console.error('p29 reg',e)}
 const st=document.createElement('style');st.textContent=`
 .abw{padding:6px 4px 4px}.abk{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:0 0 14px}
 .abk>div{background:var(--card2);border:1px solid var(--line2);border-radius:14px;padding:12px 14px;min-width:0}
