@@ -3755,6 +3755,36 @@ document.addEventListener('click',e=>{const x=e.target.closest&&e.target.closest
 const _r=render;render=function(){_r.apply(this,arguments);build()};
 })();
 
+/* p30: sidebar group headings are bold and collapsible (+ / -) */
+(function(){
+const LK='vion-grp';let col=new Set(),last=null;
+try{col=new Set(JSON.parse(localStorage.getItem(LK)||'[]'))}catch(e){}
+const save=()=>{try{localStorage.setItem(LK,JSON.stringify([...col]))}catch(e){}};
+const st=document.createElement('style');st.textContent=`
+#tabs .tg{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;user-select:none;font-weight:800;font-size:11.5px;letter-spacing:.12em;color:var(--hi,#EAF1FF);opacity:1;padding:12px 10px 6px 12px;border-radius:8px}
+#tabs .tg:hover{background:rgba(217,182,92,.08)}
+#tabs .tg:focus-visible{outline:2px solid #D9B65C;outline-offset:-2px}
+#tabs .tg .tgx{flex:none;width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font:800 15px/1 Inter,sans-serif;letter-spacing:0;color:#1a1200;background:linear-gradient(135deg,#F2D98A,#C8A04A)}
+#tabs .tg .tgt{font-weight:800!important;font-size:12px!important;letter-spacing:.1em;color:#F2D98A!important;opacity:1!important}
+#tabs .gh{display:none!important}`;document.head.appendChild(st);
+function apply(){const t=document.getElementById('tabs');if(!t)return;
+ const act=t.querySelector('button.on'),ap=act&&act.dataset.pg;
+ let cur=null;const groups=[];
+ [...t.children].forEach(e=>{if(e.classList.contains('tg')){cur={h:e,items:[]};groups.push(cur)}else if(cur)cur.items.push(e)});
+ if(ap&&ap!==last){groups.forEach(g=>{if(g.items.some(i=>i.dataset&&i.dataset.pg===ap)){const k=g.h.dataset.k||g.h.textContent.trim();col.delete(k)}});save()}
+ last=ap;
+ groups.forEach(g=>{const h=g.h;if(!h.dataset.k){h.dataset.k=h.textContent.trim();h.innerHTML=`<span class="tgt"></span><span class="tgx" aria-hidden="true"></span>`;h.querySelector('.tgt').textContent=h.dataset.k;h.setAttribute('role','button');h.tabIndex=0}
+  const c=col.has(h.dataset.k);h.setAttribute('aria-expanded',String(!c));h.querySelector('.tgx').textContent=c?'+':'−';h.title=c?'Show items':'Hide items';
+  g.items.forEach(i=>i.classList.toggle('gh',c))})}
+function tog(h){const k=h.dataset.k;col.has(k)?col.delete(k):col.add(k);save();apply()}
+document.addEventListener('click',e=>{const h=e.target.closest&&e.target.closest('#tabs .tg');if(h)tog(h)});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('#tabs .tg')){e.preventDefault();tog(e.target)}});
+if(typeof renderNav==='function'){const _n=renderNav;renderNav=function(){_n.apply(this,arguments);apply()}}
+apply();
+function watch(){const t=document.getElementById('tabs');if(!t){setTimeout(watch,300);return}new MutationObserver(()=>apply()).observe(t,{childList:true});apply()}
+watch();
+})();
+
 /* ===== ULTRON AI COMMAND CENTER (its own tab; not part of Mission, Revenue or any other page) =====
    What is real here: every number comes from the loaded workbook (D / X). Open questions go to Claude through the page's `sample`
    capability, when the viewer allows it. What is not real: there is no live web access in this viewer, so news, global scores and
