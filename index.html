@@ -3708,7 +3708,7 @@ setInterval(tick,1000);
 wr(last);tick();
 })();
 
-/* p29: Account Balance tab (source: Powerhive account-balance sheet) with CSV export */
+/* p29: Account Balance tab (source: Powerhive account-balance + account-statement sheets) with month-wise view, Statements and CSV export */
 (function(){
 IC.acbal='<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/><circle cx="17" cy="15" r="1.2"/>';
 try{if(!PAGES.some(z=>z[0]==='acbal')){const i=PAGES.findIndex(z=>z[0]==='docs');PAGES.splice(i>=0?i:PAGES.length,0,['acbal','Account Balance','खाता शेष','acbal']);Object.assign(PGOF,{'s-acbal':'acbal'})}}catch(e){console.error('p29 reg',e)}
@@ -3719,10 +3719,15 @@ const st=document.createElement('style');st.textContent=`
 .abk b{display:block;margin-top:4px;font:800 21px Inter,sans-serif;color:var(--hi);font-variant-numeric:tabular-nums}
 .abk .cr b{color:#3ec28f}.abk .dr b{color:#f08a5d}
 .abn{margin:0 0 12px;color:var(--mut);font:500 12.5px Inter,sans-serif;line-height:1.5}
-.abt{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
-.abt button{cursor:pointer;border:1px solid var(--line2);background:var(--card2);color:var(--hi);border-radius:10px;padding:8px 14px;font:700 12.5px Inter,sans-serif}
+.abt{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;align-items:center}
+.abt button,.abt a.abl{cursor:pointer;border:1px solid var(--line2);background:var(--card2);color:var(--hi);border-radius:10px;padding:8px 14px;font:700 12.5px Inter,sans-serif;text-decoration:none}
 .abt button.pri{background:linear-gradient(135deg,#F2D98A,#C8A04A);color:#1a1200;border-color:transparent}
-.abt button:hover{border-color:var(--cyan)}
+.abt button:hover,.abt a.abl:hover{border-color:var(--cyan)}
+.abt button[aria-pressed="true"]{border-color:var(--cyan);background:color-mix(in srgb,var(--cyan) 14%,var(--card2))}
+.abt .sp{flex:1}
+.abf{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;align-items:center}
+.abf input,.abf select{background:var(--card2);color:var(--fg);border:1px solid var(--line2);border-radius:10px;padding:8px 11px;font:500 13px Inter,sans-serif;min-width:0;max-width:100%}
+.abf input{min-width:210px;flex:1 1 210px}
 .abs{overflow-x:auto}.abs table{width:100%;border-collapse:collapse;font:500 13px Inter,sans-serif}
 .abs th{position:sticky;top:0;text-align:left;color:var(--mut);font:700 11px Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--line2);white-space:nowrap}
 .abs td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--fg);vertical-align:top}
@@ -3732,33 +3737,81 @@ const st=document.createElement('style');st.textContent=`
 .abs .chip.c{background:rgba(62,194,143,.16);color:#3ec28f}.abs .chip.d{background:rgba(240,138,93,.16);color:#f08a5d}.abs .chip.z{background:rgba(150,160,180,.18);color:var(--mut)}
 .abs tr.ad td{background:rgba(255,255,255,.025);padding:6px 10px;font-size:12.5px;color:var(--mut)}
 .abs tr.ad td.t{white-space:normal;word-break:break-word}
+.abs tr.sd td{background:rgba(255,255,255,.025);padding:10px 12px;white-space:normal}
+.abg{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 16px}
+.abg div{min-width:0;font:500 12px Inter,sans-serif;color:var(--fg);word-break:break-word}
+.abg small{display:block;color:var(--mut);font:700 10px Inter,sans-serif;letter-spacing:.05em;text-transform:uppercase;margin-bottom:1px}
+.abpg{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin:10px 0 0;color:var(--mut);font:600 12px Inter,sans-serif}
+.abpg button{cursor:pointer;border:1px solid var(--line2);background:var(--card2);color:var(--hi);border-radius:9px;padding:6px 12px;font:700 12px Inter,sans-serif}
+.abpg button:disabled{opacity:.4;cursor:default}
 .abe{padding:22px;color:var(--mut);text-align:center}
 `;document.head.appendChild(st);
-const open=new Set();
+const open=new Set(),sopen=new Set();
+let view='bal',per='ALL',q='',fd='',ft='',fs='',pg=0;const PS=40;
+const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],ML=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sept','Oct','Nov','Dec'];
+const mk=s=>{const m=/^(\d{1,2}) (\w{3}) (\d{4})$/.exec(String(s||'').trim());if(!m)return '';const i=MN.indexOf(m[2]);return i<0?'':m[3]+'-'+String(i+1).padStart(2,'0')};
+const mlab=k=>ML[+k.slice(5,7)-1]+"'"+k.slice(2,4);
+const dkey=s=>{const m=/^(\d{1,2}) (\w{3}) (\d{4})$/.exec(String(s||'').trim());return m?m[3]+String(MN.indexOf(m[2])+1).padStart(2,'0')+m[1].padStart(2,'0'):''};
 const inr=n=>{const a=Math.abs(n);return '₹'+a.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})};
 const bal=n=>Math.abs(n)<0.005?'₹0.00':inr(n)+(n<0?' Cr':' Dr');
-const rows=()=>(D.ab||[]).filter(r=>scope==='All'||r.a===scope);
+const num=s=>{const v=parseFloat(String(s==null?'':s).replace(/,/g,''));return isNaN(v)?0:v};
+const rows=()=>(D.ab||[]).filter(r=>(scope==='All'||r.a===scope)&&(per==='ALL'||mk(r.dd)===per));
+const S=()=>D.st&&D.st.h&&D.st.r?D.st:null;
+const SI=()=>{const h=S().h,o={};h.forEach((n,i)=>o[n]=i);return o};
+const srows=()=>{const s=S();if(!s)return [];const n=s.h.length;return s.r.filter(r=>scope==='All'||r[n]===scope)};
+function periods(){const k=new Set();(D.ab||[]).forEach(r=>{const x=mk(r.dd);if(x)k.add(x)});if(S()){const I=SI();srows().forEach(r=>{const x=mk(r[I['Document Date']]);if(x)k.add(x)})}return [...k].sort()}
+function chips(){const P=periods();return `<div class="lnb" role="group" aria-label="${tt('Period','अवधि')}"><span class="status">${tt('PERIOD','अवधि')}</span>${P.map(k=>`<button class="chip" type="button" data-abp="${k}" aria-pressed="${per===k}">${esc(mlab(k))}</button>`).join('')}<button class="chip" type="button" data-abp="ALL" aria-pressed="${per==='ALL'}">${tt('All months','सभी महीने')}</button></div>`}
 function accts(){const m=new Map();rows().forEach(r=>{let a=m.get(r.c);if(!a){a={c:r.c,n:r.n,a:r.a,st:r.st,ct:r.ct,cr:0,dr:0,net:0,k:0,tx:[]};m.set(r.c,a)}a.k++;a.net+=r.amt;r.amt<0?a.cr+=r.amt:a.dr+=r.amt;a.tx.push(r)});return [...m.values()].sort((x,y)=>x.net-y.net)}
-function body(){const A=accts();if(!A.length)return `<div class="abe">${tt('No account balance entries in your scope.','आपके स्कोप में कोई खाता शेष नहीं।')}</div>`;
+const tabs=()=>`<div class="abt" role="group" aria-label="${tt('View','व्यू')}"><button type="button" data-abv="bal" aria-pressed="${view==='bal'}">${tt('Balance','शेष')}</button><button type="button" data-abv="stm" aria-pressed="${view==='stm'}">${tt('Statements','स्टेटमेंट')}${S()?' · '+srows().length:''}</button><span class="sp"></span><a class="abl" href="https://palegreen-alpaca-587363.hostingersite.com/" target="_blank" rel="noopener noreferrer">${tt('Open source site ↗','स्रोत साइट खोलें ↗')}</a></div>`;
+function balBody(){const A=accts();const asof=D.abAsof?new Date(D.abAsof+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'';
+ if(!A.length)return `<div class="abe">${tt('No account balance entries for this selection.','इस चयन के लिए कोई खाता शेष एंट्री नहीं।')}</div>`;
  const net=A.reduce((s,a)=>s+a.net,0),cr=A.filter(a=>a.net<-0.005).reduce((s,a)=>s+a.net,0),dr=A.filter(a=>a.net>0.005).reduce((s,a)=>s+a.net,0),nc=A.filter(a=>a.net<-0.005).length,nd=A.filter(a=>a.net>0.005).length;
- const asof=D.abAsof?new Date(D.abAsof+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'';
  const k=`<div class="abk"><div><small>${tt('Net balance','नेट शेष')}</small><b>${bal(net)}</b></div><div class="cr"><small>${tt('Credit balances','क्रेडिट शेष')} · ${nc}</small><b>${inr(cr)}</b></div><div class="dr"><small>${tt('Debit (receivable)','डेबिट (प्राप्य)')} · ${nd}</small><b>${inr(dr)}</b></div><div><small>${tt('Accounts · entries','खाते · एंट्री')}</small><b>${A.length} · ${rows().length}</b></div></div>`;
  const tr=A.map(a=>{const o=open.has(a.c),ch=a.net<-0.005?'<span class="chip c">Credit</span>':a.net>0.005?'<span class="chip d">Debit</span>':'<span class="chip z">Settled</span>';
   let h=`<tr class="ar" data-ab="${esc(a.c)}"><td>${o?'▾':'▸'} ${esc(a.c)}</td><td>${esc(a.n)}</td><td>${esc(a.a)}</td><td>${esc(a.ct||'')}</td><td class="n">${a.k}</td><td class="n">${a.cr?inr(a.cr):'–'}</td><td class="n">${a.dr?inr(a.dr):'–'}</td><td class="n"><b>${bal(a.net)}</b></td><td>${ch}</td></tr>`;
   if(o)h+=a.tx.map(r=>`<tr class="ad"><td>${esc(r.dd)}</td><td>${esc(r.doc)}${r.bill?' · '+esc(r.bill):''}</td><td>${esc(r.t)}</td><td class="t" colspan="2">${esc(r.tx||'')}</td><td class="n" colspan="2">${r.amt<0?tt('Credit','क्रेडिट'):tt('Debit','डेबिट')}</td><td class="n">${bal(r.amt)}</td><td></td></tr>`).join('');return h}).join('');
- return `<div class="abw">${k}<div class="abn">${tt('Source: Powerhive account balance sheet'+(asof?' · as on '+asof:'')+'. Credit (Cr) = payment received but not yet adjusted against invoices; Debit (Dr) = amount receivable. Tap an account to see its entries.','स्रोत: Powerhive खाता शेष शीट'+(asof?' · '+asof+' तक':'')+'। Cr = प्राप्त भुगतान जो अभी समायोजित नहीं; Dr = प्राप्य राशि। एंट्री देखने के लिए खाते पर टैप करें।')}</div>
+ return `${k}<div class="abn">${tt('Source: Powerhive account balance sheet'+(asof?' · as on '+asof:'')+(per==='ALL'?'':' · entries dated '+mlab(per))+'. Credit (Cr) = payment received but not yet adjusted against invoices; Debit (Dr) = amount receivable. Tap an account to see its entries.','स्रोत: Powerhive खाता शेष शीट'+(asof?' · '+asof+' तक':'')+(per==='ALL'?'':' · '+mlab(per)+' की एंट्री')+'। Cr = प्राप्त भुगतान जो अभी समायोजित नहीं; Dr = प्राप्य राशि। एंट्री देखने के लिए खाते पर टैप करें।')}</div>
  <div class="abt"><button class="pri" data-abx="sum" type="button">⬇ ${tt('Export account balance CSV','खाता शेष CSV')}</button><button data-abx="tx" type="button">⬇ ${tt('Export all entries CSV','सभी एंट्री CSV')}</button></div>
- <div class="abs"><table><thead><tr><th>${tt('Code','कोड')}</th><th>${tt('Distributor','डिस्ट्रीब्यूटर')}</th><th>ASM</th><th>${tt('City','शहर')}</th><th class="n">${tt('Entries','एंट्री')}</th><th class="n">${tt('Credit','क्रेडिट')}</th><th class="n">${tt('Debit','डेबिट')}</th><th class="n">${tt('Net balance','नेट शेष')}</th><th>${tt('Status','स्थिति')}</th></tr></thead><tbody>${tr}</tbody></table></div></div>`}
+ <div class="abs"><table><thead><tr><th>${tt('Code','कोड')}</th><th>${tt('Distributor','डिस्ट्रीब्यूटर')}</th><th>ASM</th><th>${tt('City','शहर')}</th><th class="n">${tt('Entries','एंट्री')}</th><th class="n">${tt('Credit','क्रेडिट')}</th><th class="n">${tt('Debit','डेबिट')}</th><th class="n">${tt('Net balance','नेट शेष')}</th><th>${tt('Status','स्थिति')}</th></tr></thead><tbody>${tr}</tbody></table></div>`}
+function sfilter(){const s=S();if(!s)return [];const I=SI(),n=s.h.length,qq=q.trim().toLowerCase();
+ let R=srows().filter(r=>(per==='ALL'||mk(r[I['Document Date']])===per)&&(!fd||r[I['Account']]===fd)&&(!ft||r[I['Document Type']]===ft)&&(!fs||(fs==='open'?!r[I['Clearing Date']]:!!r[I['Clearing Date']])));
+ if(qq)R=R.filter(r=>[r[I['Document Number']],r[I['Billing Document']],r[I['Account']],r[I['Customer Name']],r[I['Reference']],r[I['Text']],r[I['GL Account Name']],r[n]].join(' ').toLowerCase().indexOf(qq)>=0);
+ return R.sort((a,b)=>(dkey(b[I['Document Date']])+b[I['Document Number']]).localeCompare(dkey(a[I['Document Date']])+a[I['Document Number']]))}
+function stmBody(){const s=S();if(!s)return `<div class="abe">${tt('Statement data is not loaded in this file.','स्टेटमेंट डेटा इस फ़ाइल में नहीं है।')}</div>`;
+ const I=SI(),n=s.h.length,base=srows().filter(r=>per==='ALL'||mk(r[I['Document Date']])===per),R=sfilter();
+ const dists=[...new Map(base.map(r=>[r[I['Account']],r[I['Customer Name']]])).entries()].sort((a,b)=>String(a[1]).localeCompare(String(b[1])));
+ const types=[...new Set(base.map(r=>r[I['Document Type']]))].sort();
+ const amt=r=>num(r[I['Amount in Local Currency']]);
+ const net=R.reduce((t,r)=>t+amt(r),0),cr=R.filter(r=>amt(r)<0).reduce((t,r)=>t+amt(r),0),dr=R.filter(r=>amt(r)>0).reduce((t,r)=>t+amt(r),0),op=R.filter(r=>!r[I['Clearing Date']]),opn=op.reduce((t,r)=>t+amt(r),0),ac=new Set(R.map(r=>r[I['Account']])).size;
+ const pages=Math.max(1,Math.ceil(R.length/PS));if(pg>=pages)pg=pages-1;if(pg<0)pg=0;const P=R.slice(pg*PS,pg*PS+PS);
+ const k=`<div class="abk"><div><small>${tt('Entries · accounts','एंट्री · खाते')}</small><b>${R.length} · ${ac}</b></div><div class="cr"><small>${tt('Credits (payments)','क्रेडिट (भुगतान)')}</small><b>${inr(cr)}</b></div><div class="dr"><small>${tt('Debits (invoices)','डेबिट (इनवॉइस)')}</small><b>${inr(dr)}</b></div><div><small>${tt('Open items · net','ओपन आइटम · नेट')} · ${op.length}</small><b>${bal(opn)}</b></div></div>`;
+ const ctl=`<div class="abf"><input type="search" id="abq" data-abq placeholder="${tt('Search document, billing doc, distributor, text…','डॉक्यूमेंट, बिलिंग डॉक, डिस्ट्रीब्यूटर, टेक्स्ट खोजें…')}" value="${esc(q)}"><select data-abd aria-label="${tt('Distributor','डिस्ट्रीब्यूटर')}"><option value="">${tt('All distributors','सभी डिस्ट्रीब्यूटर')}</option>${dists.map(([c,nm])=>`<option value="${esc(c)}"${fd===c?' selected':''}>${esc(nm)} (${esc(c)})</option>`).join('')}</select><select data-abt aria-label="${tt('Document type','डॉक्यूमेंट प्रकार')}"><option value="">${tt('All types','सभी प्रकार')}</option>${types.map(t=>`<option value="${esc(t)}"${ft===t?' selected':''}>${esc(t)}</option>`).join('')}</select><select data-abs aria-label="${tt('Status','स्थिति')}"><option value="">${tt('Open + cleared','ओपन + क्लियर')}</option><option value="open"${fs==='open'?' selected':''}>${tt('Open items','ओपन आइटम')}</option><option value="clr"${fs==='clr'?' selected':''}>${tt('Cleared','क्लियर')}</option></select></div>`;
+ const body=P.map((r,i)=>{const key=r[I['Document Number']]+'|'+r[I['Account']]+'|'+r[I['Document Date']]+'|'+(i+pg*PS),o=sopen.has(r[I['Document Number']]+'|'+r[I['Posting Key']]+'|'+r[I['Account']]+'|'+r[I['Amount in Local Currency']]+'|'+r[I['Text']]);const a=amt(r),id=r[I['Document Number']]+'|'+r[I['Posting Key']]+'|'+r[I['Account']]+'|'+r[I['Amount in Local Currency']]+'|'+r[I['Text']];
+  let h=`<tr class="ar" data-sr="${esc(id)}"><td>${o?'▾':'▸'} ${esc(r[I['Document Date']])}</td><td>${esc(r[I['Document Number']])}${r[I['Billing Document']]?' · '+esc(r[I['Billing Document']]):''}</td><td>${esc(r[I['Customer Name']])}<br><span style="color:var(--mut);font-size:11.5px">${esc(r[I['Account']])}</span></td><td>${esc(r[n]||'')}</td><td>${esc(r[I['Document Type']])}</td><td class="n"><b>${a<0?inr(a)+' Cr':inr(a)+' Dr'}</b></td><td>${r[I['Clearing Date']]?'<span class="chip z">'+tt('Cleared','क्लियर')+' '+esc(r[I['Clearing Date']])+'</span>':'<span class="chip d">'+tt('Open','ओपन')+'</span>'}</td><td style="white-space:normal;word-break:break-word">${esc(r[I['Text']]||r[I['Reference']]||'')}</td></tr>`;
+  if(o)h+=`<tr class="sd"><td colspan="8"><div class="abg">${s.h.map((nm,j)=>`<div><small>${esc(nm)}</small>${esc(r[j]===''||r[j]==null?'–':r[j])}</div>`).join('')}<div><small>ASM (dashboard)</small>${esc(r[n]||'–')}</div></div></td></tr>`;return h}).join('');
+ return `${k}<div class="abn">${tt('Source: Powerhive account statement sheet · every line posted to the distributor accounts, with all 36 source columns (tap a row to open them). Open item = no clearing date.','स्रोत: Powerhive अकाउंट स्टेटमेंट शीट · डिस्ट्रीब्यूटर खातों की हर पोस्टिंग, सभी 36 कॉलम के साथ (खोलने के लिए पंक्ति पर टैप करें)। ओपन आइटम = क्लियरिंग तारीख नहीं।')}</div>
+ ${ctl}<div class="abt"><button class="pri" data-abx="stm" type="button">⬇ ${tt('Export statements CSV (all columns)','स्टेटमेंट CSV (सभी कॉलम)')}</button></div>
+ ${R.length?`<div class="abs"><table><thead><tr><th>${tt('Date','तारीख')}</th><th>${tt('Document · billing','डॉक्यूमेंट · बिलिंग')}</th><th>${tt('Distributor','डिस्ट्रीब्यूटर')}</th><th>ASM</th><th>${tt('Type','प्रकार')}</th><th class="n">${tt('Amount','राशि')}</th><th>${tt('Status','स्थिति')}</th><th>${tt('Text / reference','टेक्स्ट / संदर्भ')}</th></tr></thead><tbody>${body}</tbody></table></div><div class="abpg"><span>${pg*PS+1}–${Math.min(R.length,pg*PS+PS)} ${tt('of','/')} ${R.length}</span><button type="button" data-abg="-1"${pg<=0?' disabled':''}>‹ ${tt('Prev','पिछला')}</button><button type="button" data-abg="1"${pg>=pages-1?' disabled':''}>${tt('Next','अगला')} ›</button></div>`:`<div class="abe">${tt('No statement entries match these filters.','इन फ़िल्टर से कोई स्टेटमेंट एंट्री नहीं मिली।')}</div>`}`}
+function body(){return `<div class="abw">${tabs()}${chips()}${view==='stm'?stmBody():balBody()}</div>`}
 function csv(a){const q=v=>{v=v==null?'':String(v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};return '﻿'+a.map(r=>r.map(q).join(',')).join('\r\n')}
 function save(name,text){const b=new Blob([text],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(b),l=document.createElement('a');l.href=u;l.download=name;document.body.appendChild(l);l.click();setTimeout(()=>{l.remove();URL.revokeObjectURL(u)},500);try{toast(tt('CSV downloaded: ','CSV डाउनलोड: ')+name)}catch(e){}}
-function exp(kind){const d=new Date(),ds=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'),sc=scope==='All'?'All':scope.replace(/\s+/g,'_');
- if(kind==='sum'){const A=accts();save('VION_Account_Balance_'+sc+'_'+ds+'.csv',csv([['Account Code','Distributor','ASM','State','City','Entries','Credit (INR)','Debit (INR)','Net Balance (INR)','Status','As of']].concat(A.map(a=>[a.c,a.n,a.a,a.st||'',a.ct||'',a.k,a.cr.toFixed(2),a.dr.toFixed(2),a.net.toFixed(2),a.net<-0.005?'Credit':a.net>0.005?'Debit':'Settled',D.abAsof||'']))))}
- else save('VION_Account_Entries_'+sc+'_'+ds+'.csv',csv([['Account Code','Distributor','ASM','ASM (as per source sheet)','Document Number','Billing Document','Document Type','Document Date','Amount (INR)','Text']].concat(rows().map(r=>[r.c,r.n,r.a,r.sa||'',r.doc,r.bill||'',r.t,r.dd,r.amt.toFixed(2),r.tx||'']))))}
+function exp(kind){const d=new Date(),ds=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'),sc=scope==='All'?'All':scope.replace(/\s+/g,'_'),pm=per==='ALL'?'':'_'+mlab(per).replace("'",'');
+ if(kind==='sum'){const A=accts();save('VION_Account_Balance_'+sc+pm+'_'+ds+'.csv',csv([['Account Code','Distributor','ASM','State','City','Entries','Credit (INR)','Debit (INR)','Net Balance (INR)','Status','As of']].concat(A.map(a=>[a.c,a.n,a.a,a.st||'',a.ct||'',a.k,a.cr.toFixed(2),a.dr.toFixed(2),a.net.toFixed(2),a.net<-0.005?'Credit':a.net>0.005?'Debit':'Settled',D.abAsof||'']))))}
+ else if(kind==='stm'){const s=S();if(!s)return;save('VION_Account_Statements_'+sc+pm+'_'+ds+'.csv',csv([s.h.concat(['ASM (dashboard)'])].concat(sfilter().map(r=>r.map(v=>v==null?'':v)))))}
+ else save('VION_Account_Entries_'+sc+pm+'_'+ds+'.csv',csv([['Account Code','Distributor','ASM','ASM (as per source sheet)','Document Number','Billing Document','Document Type','Document Date','Amount (INR)','Text']].concat(rows().map(r=>[r.c,r.n,r.a,r.sa||'',r.doc,r.bill||'',r.t,r.dd,r.amt.toFixed(2),r.tx||'']))))}
 function build(){try{const main=document.getElementById('main');if(!main||!D||!D.ab)return;main.querySelectorAll('.p29').forEach(e=>e.remove());
- const t=document.createElement('div');t.innerHTML=`<section class="sec rvs p29 pgx" id="s-acbal" data-pg="acbal"><div class="rvh"><span class="n">${String(PAGES.findIndex(z=>z[0]==='acbal')+1).padStart(2,'0')}</span><h3>${tt('Account balance','खाता शेष')}<small>${tt('Distributor-wise credit / debit balance with CSV export','डिस्ट्रीब्यूटर-वार क्रेडिट / डेबिट शेष, CSV के साथ')}</small></h3></div><div class="rvu"></div>${body()}</section>`;
+ const t=document.createElement('div');t.innerHTML=`<section class="sec rvs p29 pgx" id="s-acbal" data-pg="acbal"><div class="rvh"><span class="n">${String(PAGES.findIndex(z=>z[0]==='acbal')+1).padStart(2,'0')}</span><h3>${tt('Account balance','खाता शेष')}<small>${tt('Distributor-wise balance and full account statements, month-wise, with CSV export','डिस्ट्रीब्यूटर-वार शेष और पूरे अकाउंट स्टेटमेंट, महीने-वार, CSV के साथ')}</small></h3></div><div class="rvu"></div>${body()}</section>`;
  const n=t.firstElementChild,f=[...main.children].find(e=>e.dataset&&e.dataset.pg==='acbal'&&!e.classList.contains('p29'));f?main.insertBefore(n,f):main.appendChild(n);if(typeof applyPage==='function')applyPage()}catch(e){console.error('p29',e)}}
-document.addEventListener('click',e=>{const x=e.target.closest&&e.target.closest('#s-acbal [data-abx]');if(x){exp(x.dataset.abx);return}
- const r=e.target.closest&&e.target.closest('#s-acbal tr[data-ab]');if(r){const c=r.dataset.ab;open.has(c)?open.delete(c):open.add(c);build()}});
+document.addEventListener('click',e=>{const T=e.target.closest?e.target:null;if(!T)return;
+ const x=T.closest('#s-acbal [data-abx]');if(x){exp(x.dataset.abx);return}
+ const v=T.closest('#s-acbal [data-abv]');if(v){view=v.dataset.abv;pg=0;build();return}
+ const p=T.closest('#s-acbal [data-abp]');if(p){per=p.dataset.abp;pg=0;build();return}
+ const g=T.closest('#s-acbal [data-abg]');if(g){pg+=+g.dataset.abg;build();return}
+ const sr=T.closest('#s-acbal tr[data-sr]');if(sr){const c=sr.dataset.sr;sopen.has(c)?sopen.delete(c):sopen.add(c);build();return}
+ const r=T.closest('#s-acbal tr[data-ab]');if(r){const c=r.dataset.ab;open.has(c)?open.delete(c):open.add(c);build()}});
+document.addEventListener('change',e=>{const T=e.target;if(!T||!T.closest||!T.closest('#s-acbal'))return;
+ if(T.hasAttribute('data-abd')){fd=T.value;pg=0;build()}else if(T.hasAttribute('data-abt')){ft=T.value;pg=0;build()}else if(T.hasAttribute('data-abs')){fs=T.value;pg=0;build()}});
+document.addEventListener('input',e=>{const T=e.target;if(!T||!T.hasAttribute||!T.hasAttribute('data-abq'))return;q=T.value;pg=0;const pos=T.selectionStart;build();const i=document.getElementById('abq');if(i){i.focus();try{i.setSelectionRange(pos,pos)}catch(_){}}});
 const _r=render;render=function(){_r.apply(this,arguments);build()};
 })();
 
@@ -4237,7 +4290,7 @@ setTimeout(apply35,0);
   for(const sc of Object.keys(rec.wk))out[sc]=await unseal(k,rec.wk[sc],'wk|'+rec.id+'|'+sc);return out}
  // territory slice: only that ASM's distributors, invoices and towns; zone-only panels emptied
  function slice(D,asm){const d=JSON.parse(JSON.stringify(D));d.asms=[asm];d.dist=d.dist.filter(x=>x.asm===asm);d.tx=d.tx.filter(t=>t.a===asm);d.ln=(d.ln||[]).filter(l=>l.a===asm);
-  d.terr=(d.terr||[]).filter(t=>t[1]===asm);d.sku=[];d.fix=[];d.mv=d.mv?Object.assign({},d.mv,{d:d.mv.d.filter(x=>x[2]===asm)}):d.mv;d.ab=(d.ab||[]).filter(t=>t.a===asm);d.scopeOnly=asm;return d}
+  d.terr=(d.terr||[]).filter(t=>t[1]===asm);d.sku=[];d.fix=[];d.mv=d.mv?Object.assign({},d.mv,{d:d.mv.d.filter(x=>x[2]===asm)}):d.mv;d.ab=(d.ab||[]).filter(t=>t.a===asm);if(d.st)d.st={h:d.st.h,r:d.st.r.filter(x=>x[x.length-1]===asm)};d.scopeOnly=asm;return d}
  async function sealData(D,dks){const blobs={};for(const sc of Object.keys(dks)){const v=sc==='ALL'?D:slice(D,sc);blobs[sc]=await seal(await imp(dks[sc]),enc.encode(JSON.stringify(v)),'data|'+sc)}
   return {v:1,asof:D.asof,made:new Date().toISOString().slice(0,10),blobs}}
  async function openData(file,sc,raw){return JSON.parse(dec.decode(await unseal(await imp(raw),file.blobs[sc],'data|'+sc)))}
